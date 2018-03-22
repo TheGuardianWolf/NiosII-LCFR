@@ -102,9 +102,6 @@ int alt_erase_block_intel(alt_flash_dev* flash_info, int block_offset)
   if (!ret_code)
   {
 
-    /* Clear status priort to erase operation */   
-    flash->write_native((alt_u8*)flash->dev.base_addr + block_offset, 0x50);
-    
     flash->write_native((alt_u8*)flash->dev.base_addr + block_offset, 0x20);
     flash->write_native((alt_u8*)flash->dev.base_addr + block_offset, 0xD0);
 

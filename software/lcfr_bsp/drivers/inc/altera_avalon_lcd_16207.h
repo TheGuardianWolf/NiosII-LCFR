@@ -68,8 +68,8 @@ typedef struct altera_avalon_lcd_16207_state_s
   char           address;
   char           esccount;
 
-  unsigned char  scrollpos;
-  unsigned char  scrollmax;
+  char           scrollpos;
+  char           scrollmax;
   char           active;    /* If non-zero then the foreground routines are
                              * active so the timer call must not update the
                              * display. */

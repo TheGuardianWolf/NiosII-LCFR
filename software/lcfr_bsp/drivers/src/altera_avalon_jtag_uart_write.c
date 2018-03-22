@@ -184,7 +184,7 @@ altera_avalon_jtag_uart_write(altera_avalon_jtag_uart_state* sp,
         ;
 #endif /* __ucosii__ */
 
-      if  (sp->host_inactive)
+      if (out == sp->tx_out)
          break;
     }
   }

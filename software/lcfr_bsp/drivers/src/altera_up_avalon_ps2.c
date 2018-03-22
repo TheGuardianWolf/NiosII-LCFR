@@ -230,7 +230,7 @@ int alt_up_ps2_read_fd (alt_fd* fd, char* ptr, int len)
 	int count = 0;
 	while (count < len);
 	{
-		status = alt_up_ps2_read_data_byte_timeout(ps2, (unsigned char *)ptr++);
+		status = alt_up_ps2_read_data_byte_timeout(ps2, ptr++);
 		if (status!=0)
 			return count;
 		count++;

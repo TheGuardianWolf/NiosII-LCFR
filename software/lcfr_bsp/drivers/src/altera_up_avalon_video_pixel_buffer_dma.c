@@ -59,8 +59,8 @@ int alt_up_pixel_buffer_dma_draw(alt_up_pixel_buffer_dma_dev *pixel_buffer, unsi
 	/* Check the mode VGA Pixel Buffer is using. */
 	if (pixel_buffer->addressing_mode == ALT_UP_PIXEL_BUFFER_XY_ADDRESS_MODE) {
 		/* For X-Y addressing mode, the address format is | unused | Y | X |. So shift bits for coordinates X and Y into their respective locations. */
-		addr += ((x & pixel_buffer->x_coord_mask) << pixel_buffer->x_coord_offset);
-		addr += ((y & pixel_buffer->y_coord_mask) << pixel_buffer->y_coord_offset);
+		addr |= ((x & pixel_buffer->x_coord_mask) << pixel_buffer->x_coord_offset);
+		addr |= ((y & pixel_buffer->y_coord_mask) << pixel_buffer->y_coord_offset);
 	} else {
 		/* In a consecutive addressing mode, the pixels are stored in consecutive memory locations. So the address of a pixel at (x,y) can be computed as
 		 * (y*x_resolution + x).*/

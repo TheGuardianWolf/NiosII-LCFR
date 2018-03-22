@@ -4,14 +4,11 @@
 
 BSP_TYPE=hal
 BSP_DIR=.
-SOPC_DIR=../../firmware/
-SOPC_FILE=../../firmware/nios2.sopcinfo
+SOPC_DIR=../../
+SOPC_FILE=D:/723/NiosII-LCFR/firmware/nios2.sopcinfo
 NIOS2_BSP_ARGS=""
 CPU_NAME=
 
-if [ -n "$CPU_NAME" ]; then
-  NIOS2_BSP_ARGS="$NIOS2_BSP_ARGS --cpu-name $CPU_NAME"
-fi
 
 # Don't run make if create-this-app script is called with --no-make arg
 SKIP_MAKE=
@@ -35,9 +32,9 @@ done
 
 if [ -z "$SOPC_FILE" ]; then
 	echo "WARNING: Use of a directory for locating a .sopcinfo file is deprecated in 10.1. Multiple .sopcinfo files may exist. You must specify the full .sopcinfo path."
-	cmd="nios2-bsp $BSP_TYPE $BSP_DIR $SOPC_DIR $NIOS2_BSP_ARGS"
+	cmd="nios2-bsp $BSP_TYPE $BSP_DIR $SOPC_DIR $NIOS2_BSP_ARGS $CPU_NAME"
 else
-	cmd="nios2-bsp $BSP_TYPE $BSP_DIR $SOPC_FILE $NIOS2_BSP_ARGS"
+	cmd="nios2-bsp $BSP_TYPE $BSP_DIR $SOPC_FILE $NIOS2_BSP_ARGS $CPU_NAME"
 fi
 
 

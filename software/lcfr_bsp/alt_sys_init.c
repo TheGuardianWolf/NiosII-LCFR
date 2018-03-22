@@ -2,9 +2,9 @@
  * alt_sys_init.c - HAL initialization source
  *
  * Machine generated for CPU 'nios2' in SOPC Builder design 'nios2'
- * SOPC Builder design path: C:/Users/lichk/Documents/Git/NiosII-LCFR/firmware/nios2.sopcinfo
+ * SOPC Builder design path: D:/723/NiosII-LCFR/firmware/nios2.sopcinfo
  *
- * Generated: Tue Mar 20 12:20:43 NZDT 2018
+ * Generated: Fri Mar 23 10:48:08 NZDT 2018
  */
 
 /*

@@ -154,10 +154,10 @@ typedef struct altera_avalon_uart_state_s
 {
   void*            base;            /* The base address of the device */
   alt_u32          ctrl;            /* Shadow value of the control register */
-  volatile alt_u32 rx_start;        /* Start of the pending receive data */
+  alt_u32          rx_start;        /* Start of the pending receive data */
   volatile alt_u32 rx_end;          /* End of the pending receive data */
   volatile alt_u32 tx_start;        /* Start of the pending transmit data */
-  volatile alt_u32 tx_end;          /* End of the pending transmit data */
+  alt_u32          tx_end;          /* End of the pending transmit data */
 #ifdef ALTERA_AVALON_UART_USE_IOCTL
   struct termios termios;           /* Current device configuration */
   alt_u32          freq;            /* Current baud rate */
@@ -170,8 +170,8 @@ typedef struct altera_avalon_uart_state_s
                                      * read buffer in multi-threaded mode */
   ALT_SEM          (write_lock)     /* Semaphore used to control access to the
                                      * write buffer in multi-threaded mode */
-  volatile alt_u8  rx_buf[ALT_AVALON_UART_BUF_LEN]; /* The receive buffer */
-  volatile alt_u8  tx_buf[ALT_AVALON_UART_BUF_LEN]; /* The transmit buffer */
+  alt_u8           rx_buf[ALT_AVALON_UART_BUF_LEN]; /* The receive buffer */
+  alt_u8           tx_buf[ALT_AVALON_UART_BUF_LEN]; /* The transmit buffer */
 } altera_avalon_uart_state;
 
 /*

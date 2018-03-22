@@ -126,6 +126,7 @@ altera_avalon_uart_read(altera_avalon_uart_state* sp, char* ptr, int len,
 {
   alt_irq_context context;
   int             block;
+  alt_u32         next;
   alt_u8          read_would_block = 0;
   int             count = 0;
 
@@ -142,6 +143,13 @@ altera_avalon_uart_read(altera_avalon_uart_state* sp, char* ptr, int len,
    */
 
   ALT_SEM_PEND (sp->read_lock, 0);
+
+  /*
+   * Calculate which slot in the circular buffer is the next one to read
+   * data from.
+   */
+
+  next = (sp->rx_start + 1) & ALT_AVALON_UART_BUF_MSK;
 
   /*
    * Loop, copying data from the circular buffer to the destination address
@@ -166,7 +174,7 @@ altera_avalon_uart_read(altera_avalon_uart_state* sp, char* ptr, int len,
       count++;
       *ptr++ = sp->rx_buf[sp->rx_start];
       
-      sp->rx_start = (sp->rx_start+1) & ALT_AVALON_UART_BUF_MSK;
+      sp->rx_start = (++sp->rx_start) & ALT_AVALON_UART_BUF_MSK;
     }
 
     /*
@@ -230,7 +238,7 @@ altera_avalon_uart_read(altera_avalon_uart_state* sp, char* ptr, int len,
 
   /* Return the number of bytes read */
   if(read_would_block) {
-    return -EWOULDBLOCK;
+    return ~EWOULDBLOCK;
   }
   else {
     return count;

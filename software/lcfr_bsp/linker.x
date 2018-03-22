@@ -2,9 +2,9 @@
  * linker.x - Linker script
  *
  * Machine generated for CPU 'nios2' in SOPC Builder design 'nios2'
- * SOPC Builder design path: C:/Users/lichk/Documents/Git/NiosII-LCFR/firmware/nios2.sopcinfo
+ * SOPC Builder design path: D:/723/NiosII-LCFR/firmware/nios2.sopcinfo
  *
- * Generated: Tue Mar 20 12:20:43 NZDT 2018
+ * Generated: Fri Mar 23 10:48:08 NZDT 2018
  */
 
 /*
@@ -93,7 +93,6 @@ SECTIONS
         KEEP (*(.irq));
         KEEP (*(.exceptions.entry.label));
         KEEP (*(.exceptions.entry.user));
-        KEEP (*(.exceptions.entry.ecc_fatal));
         KEEP (*(.exceptions.entry));
         KEEP (*(.exceptions.irqtest.user));
         KEEP (*(.exceptions.irqtest));
@@ -197,7 +196,7 @@ SECTIONS
         PROVIDE (__fini_array_end = ABSOLUTE(.));
         SORT(CONSTRUCTORS)
         KEEP (*(.eh_frame))
-        *(.gcc_except_table .gcc_except_table.*)
+        *(.gcc_except_table)
         *(.dynamic)
         PROVIDE (__CTOR_LIST__ = ABSOLUTE(.));
         KEEP (*(.ctors))
@@ -209,7 +208,7 @@ SECTIONS
         PROVIDE (__DTOR_END__ = ABSOLUTE(.));
         KEEP (*(.jcr))
         . = ALIGN(4);
-    } > onchip_memory = 0x3a880100 /* NOP instruction (always in big-endian byte ordering) */
+    } > onchip_memory = 0x3a880100 /* Nios II NOP instruction */
 
     .rodata :
     {
@@ -282,7 +281,7 @@ SECTIONS
     .onchip_memory :
     {
         PROVIDE (_alt_partition_onchip_memory_start = ABSOLUTE(.));
-        *(.onchip_memory .onchip_memory. onchip_memory.*)
+        *(.onchip_memory. onchip_memory.*)
         . = ALIGN(4);
         PROVIDE (_alt_partition_onchip_memory_end = ABSOLUTE(.));
     } > onchip_memory
@@ -292,7 +291,7 @@ SECTIONS
     .flash_controller :
     {
         PROVIDE (_alt_partition_flash_controller_start = ABSOLUTE(.));
-        *(.flash_controller .flash_controller. flash_controller.*)
+        *(.flash_controller. flash_controller.*)
         . = ALIGN(4);
         PROVIDE (_alt_partition_flash_controller_end = ABSOLUTE(.));
     } > flash_controller
@@ -302,7 +301,7 @@ SECTIONS
     .sdram :
     {
         PROVIDE (_alt_partition_sdram_start = ABSOLUTE(.));
-        *(.sdram .sdram. sdram.*)
+        *(.sdram. sdram.*)
         . = ALIGN(4);
         PROVIDE (_alt_partition_sdram_end = ABSOLUTE(.));
         _end = ABSOLUTE(.);

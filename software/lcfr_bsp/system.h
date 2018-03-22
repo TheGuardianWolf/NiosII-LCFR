@@ -2,9 +2,9 @@
  * system.h - SOPC Builder system and BSP software package information
  *
  * Machine generated for CPU 'nios2' in SOPC Builder design 'nios2'
- * SOPC Builder design path: C:/Users/lichk/Documents/Git/NiosII-LCFR/firmware/nios2.sopcinfo
+ * SOPC Builder design path: D:/723/NiosII-LCFR/firmware/nios2.sopcinfo
  *
- * Generated: Tue Mar 20 12:20:43 NZDT 2018
+ * Generated: Fri Mar 23 10:48:08 NZDT 2018
  */
 
 /*
@@ -62,7 +62,7 @@
 
 #define ALT_CPU_ARCHITECTURE "altera_nios2_qsys"
 #define ALT_CPU_BIG_ENDIAN 0
-#define ALT_CPU_BREAK_ADDR 0x00042820
+#define ALT_CPU_BREAK_ADDR 0x42820
 #define ALT_CPU_CPU_FREQ 100000000u
 #define ALT_CPU_CPU_ID_SIZE 1
 #define ALT_CPU_CPU_ID_VALUE 0x00000000
@@ -71,7 +71,7 @@
 #define ALT_CPU_DCACHE_LINE_SIZE 32
 #define ALT_CPU_DCACHE_LINE_SIZE_LOG2 5
 #define ALT_CPU_DCACHE_SIZE 2048
-#define ALT_CPU_EXCEPTION_ADDR 0x00000020
+#define ALT_CPU_EXCEPTION_ADDR 0x20
 #define ALT_CPU_FLUSHDA_SUPPORTED
 #define ALT_CPU_FREQ 100000000
 #define ALT_CPU_HARDWARE_DIVIDE_PRESENT 1
@@ -87,7 +87,7 @@
 #define ALT_CPU_INST_ADDR_WIDTH 0x19
 #define ALT_CPU_NAME "nios2"
 #define ALT_CPU_NUM_OF_SHADOW_REG_SETS 0
-#define ALT_CPU_RESET_ADDR 0x01000000
+#define ALT_CPU_RESET_ADDR 0x1000000
 
 
 /*
@@ -96,7 +96,7 @@
  */
 
 #define NIOS2_BIG_ENDIAN 0
-#define NIOS2_BREAK_ADDR 0x00042820
+#define NIOS2_BREAK_ADDR 0x42820
 #define NIOS2_CPU_FREQ 100000000u
 #define NIOS2_CPU_ID_SIZE 1
 #define NIOS2_CPU_ID_VALUE 0x00000000
@@ -105,7 +105,7 @@
 #define NIOS2_DCACHE_LINE_SIZE 32
 #define NIOS2_DCACHE_LINE_SIZE_LOG2 5
 #define NIOS2_DCACHE_SIZE 2048
-#define NIOS2_EXCEPTION_ADDR 0x00000020
+#define NIOS2_EXCEPTION_ADDR 0x20
 #define NIOS2_FLUSHDA_SUPPORTED
 #define NIOS2_HARDWARE_DIVIDE_PRESENT 1
 #define NIOS2_HARDWARE_MULTIPLY_PRESENT 1
@@ -119,7 +119,7 @@
 #define NIOS2_INITDA_SUPPORTED
 #define NIOS2_INST_ADDR_WIDTH 0x19
 #define NIOS2_NUM_OF_SHADOW_REG_SETS 0
-#define NIOS2_RESET_ADDR 0x01000000
+#define NIOS2_RESET_ADDR 0x1000000
 
 
 /*
@@ -504,7 +504,7 @@
 #define TIMER1MS_IRQ 0
 #define TIMER1MS_IRQ_INTERRUPT_CONTROLLER_ID 0
 #define TIMER1MS_LOAD_VALUE 99999
-#define TIMER1MS_MULT 0.001
+#define TIMER1MS_MULT 0.0010
 #define TIMER1MS_NAME "/dev/timer1ms"
 #define TIMER1MS_PERIOD 1
 #define TIMER1MS_PERIOD_UNITS "ms"

@@ -57,7 +57,8 @@ ALT_LIBRARY_DIRS += $(ALT_LIBRARY_ROOT_DIR)
 #                               COMPILATION FLAGS
 #------------------------------------------------------------------------------
 # Default C pre-processor flags for a BSP:
-ALT_CPPFLAGS += -pipe
+ALT_CPPFLAGS += -DSYSTEM_BUS_WIDTH=32 \
+                -pipe
 
 
 #------------------------------------------------------------------------------
@@ -77,23 +78,20 @@ ALT_CPPFLAGS += -pipe
 
 # This following VERSION comment indicates the version of the tool used to 
 # generate this makefile. A makefile variable is provided for VERSION as well. 
-# ACDS_VERSION: 17.1
-ACDS_VERSION := 17.1
+# ACDS_VERSION: 13.0
+ACDS_VERSION := 13.0
 
 # This following BUILD_NUMBER comment indicates the build number of the tool 
 # used to generate this makefile. 
-# BUILD_NUMBER: 590
+# BUILD_NUMBER: 156
 
 # Qsys--generated SOPCINFO file. Required for resolving node instance ID's with 
 # design component names. 
-SOPCINFO_FILE := C:/Users/lichk/Documents/Git/NiosII-LCFR/firmware/nios2.sopcinfo
+SOPCINFO_FILE := ../../firmware/nios2.sopcinfo
 
 # Big-Endian operation. 
 # setting BIG_ENDIAN is false
-
-
-# BMX present. 
-# setting BMX is false
+ALT_CFLAGS += -EL
 
 # Path to the provided C language runtime initialization code. 
 BSP_CRT0 := $(ALT_LIBRARY_ROOT_DIR)/obj/HAL/src/crt0.o
@@ -108,9 +106,6 @@ ELF_PATCH_FLAG  += --thread_model hal
 # setting BSP_TYPE is hal
 ALT_CPPFLAGS += -D__hal__
 BSP_TYPE := hal
-
-# CDX present. 
-# setting CDX is false
 
 # CPU Name 
 # setting CPU_NAME is nios2
@@ -178,7 +173,7 @@ ELF_PATCH_FLAG  += --timestamp 1393900972
 # setting altera_avalon_uart_driver.enable_small_driver is false
 
 # Build a custom version of newlib with the specified space-separated compiler 
-# flags. The custom newlib build will be placed in the <bsp root>/newlib 
+# flags. The custom newlib build will be placed in the &lt;bsp root>/newlib 
 # directory, and will be used only for applications that utilize this BSP. 
 # setting hal.custom_newlib_flags is none
 
@@ -191,7 +186,8 @@ ELF_PATCH_FLAG  += --timestamp 1393900972
 
 # When your application exits, close file descriptors, call C++ destructors, 
 # etc. Code footprint can be reduced by disabling clean exit. If disabled, adds 
-# -DALT_NO_CLEAN_EXIT to ALT_CPPFLAGS -D'exit(a)=_exit(a)' in public.mk. none 
+# -DALT_NO_CLEAN_EXIT to ALT_CPPFLAGS and -Wl,--defsym, exit=_exit to 
+# ALT_LDFLAGS in public.mk. none 
 # setting hal.enable_clean_exit is true
 
 # Add exit() support. This option increases code footprint if your "main()" 
@@ -236,8 +232,8 @@ ALT_CPPFLAGS += -DALT_NO_INSTRUCTION_EMULATION
 # Turns on HAL runtime stack checking feature. Enabling this setting causes 
 # additional code to be placed into each subroutine call to generate an 
 # exception if a stack collision occurs with the heap or statically allocated 
-# data. If true, adds -DALT_STACK_CHECK and -fstack-limit-register=et to 
-# ALT_CPPFLAGS in public.mk. none 
+# data. If true, adds -DALT_STACK_CHECK and -mstack-check to ALT_CPPFLAGS in 
+# public.mk. none 
 # setting hal.enable_runtime_stack_checking is false
 
 # The BSP is compiled with optimizations to speedup HDL simulation such as 
@@ -265,29 +261,10 @@ ALT_CPPFLAGS += -DALT_NO_INSTRUCTION_EMULATION
 # SOPC_SYSID_FLAG in public.mk. none 
 # setting hal.enable_sopc_sysid_check is true
 
-# C/C++ compiler to generate (do not generate) GP-relative accesses. 'none' 
-# tells the compilter not to generate GP-relative accesses. 'local' will 
-# generate GP-relative accesses for small data objects that are not external, 
-# weak, or uninitialized common symbols. Also use GP-relative addressing for 
-# objects that have been explicitly placed in a small data section via a 
-# section attribute. provides the default set of debug symbols typically 
-# required to debug a typical application. 'global' is same as 'local' but also 
-# generate GP-relative accesses for small data objects that are external, weak, 
-# or common. none 
-# setting hal.make.cflags_mgpopt is -mgpopt=global
-ALT_CFLAGS += -mgpopt=global
-
 # Enable BSP generation to query if SOPC system is big endian. If true ignores 
-# export of 'ALT_CFLAGS += -meb' to public.mk if big endian system. none 
+# export of 'ALT_CFLAGS += -EB' to public.mk if big endian system. If true 
+# ignores export of 'ALT_CFLAGS += -EL' if little endian system. none 
 # setting hal.make.ignore_system_derived.big_endian is false
-
-# If true, prevents GCC from using BMX instructions. If false, GCC uses BMX 
-# instructions if present in the CPU. none 
-# setting hal.make.ignore_system_derived.bmx_present is false
-
-# If true, prevents GCC from using CDX instructions. If false, GCC uses CDX 
-# instructions if present in the CPU. none 
-# setting hal.make.ignore_system_derived.cdx_present is false
 
 # Enable BSP generation to query if SOPC system has a debug core present. If 
 # true ignores export of 'CPU_HAS_DEBUG_CORE = 1' to public.mk if a debug core 
