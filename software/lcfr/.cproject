@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<buildSystem id="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086">
 			<storageModule id="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086" moduleId="org.eclipse.cdt.core.settings"/>
@@ -447,12 +445,28 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.cygwin.base.1046598600" name="Cygwin C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.cygwin.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.cygwin.base.1797380629" name="Cygwin C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.cygwin.base">
-								<option id="gnu.cpp.link.option.paths.73453605" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths"/>
-								<option id="gnu.cpp.link.option.libs.616230435" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs"/>
+								<option id="gnu.cpp.link.option.paths.73453605" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
+								<option id="gnu.cpp.link.option.libs.616230435" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1324145484" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
 								</inputType>
+							</tool>
+							<tool id="altera.tool.gnu.c.compiler.mingw.873573460" name="Nios II GCC C Compiler" superClass="altera.tool.gnu.c.compiler.mingw">
+								<option id="gnu.c.compiler.option.include.paths.1237759131" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lcfr_bsp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lcfr_bsp/drivers/inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/lcfr_bsp/HAL/inc}&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1237335859" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="altera.tool.gnu.cpp.compiler.mingw.430297697" name="Nios II GCC C++ Compiler" superClass="altera.tool.gnu.cpp.compiler.mingw">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1367673777" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="altera.tool.gnu.archiver.mingw.448771093" name="Nios II GCC Archiver" superClass="altera.tool.gnu.archiver.mingw"/>
+							<tool id="altera.tool.gnu.c.linker.mingw.97959166" name="Nios II GCC C Linker" superClass="altera.tool.gnu.c.linker.mingw"/>
+							<tool id="altera.tool.gnu.assembler.mingw.55237763" name="Nios II GCC Assembler" superClass="altera.tool.gnu.assembler.mingw">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.678190933" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
@@ -477,15 +491,6 @@
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="lcfr.null.584243164" name="lcfr"/>
-	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086;preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086.;cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.base.850011804;cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin.1532822464">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086;preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086.;cdt.managedbuild.tool.gnu.c.compiler.cygwin.base.1946357080;cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.1443976598">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
 		<buildTargets>
@@ -519,4 +524,20 @@
 		<resource resourceType="PROJECT" workspacePath="/lcfr"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086;preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086.;altera.tool.gnu.cpp.compiler.mingw.430297697;cdt.managedbuild.tool.gnu.cpp.compiler.input.1367673777">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086;preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086.;altera.tool.gnu.c.compiler.mingw.873573460;cdt.managedbuild.tool.gnu.c.compiler.input.1237335859">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086;preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086.;cdt.managedbuild.tool.gnu.c.compiler.cygwin.base.1946357080;cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.1443976598">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086;preference.org.eclipse.cdt.managedbuilder.core.configurationDataProvider.1213112086.;cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.base.850011804;cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin.1532822464">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCWinManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+	</storageModule>
 </cproject>
