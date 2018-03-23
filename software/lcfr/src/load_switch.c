@@ -1,4 +1,7 @@
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include <stdbool.h>
+#include <stdio.h>
 
 void Task_loadSwitch(void *pvParameters) {
 	while (1) {
