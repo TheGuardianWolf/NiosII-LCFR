@@ -152,6 +152,8 @@ C_SRCS += inc/freertos/port.c
 C_SRCS += inc/freertos/queue.c
 C_SRCS += inc/freertos/tasks.c
 C_SRCS += inc/freertos/timers.c
+C_SRCS += src/load_manager.c
+C_SRCS += src/load_switch.c
 CXX_SRCS :=
 ASM_SRCS := inc/freertos/port_asm.S
 
