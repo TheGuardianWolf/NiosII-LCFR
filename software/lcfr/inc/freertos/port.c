@@ -72,6 +72,7 @@
  *----------------------------------------------------------*/
 
 /* Standard Includes. */
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 
@@ -83,6 +84,7 @@
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+//#include "FreeRTOSConfig.h"
 
 /* Interrupts are enabled. */
 #define portINITIAL_ESTATUS     ( StackType_t ) 0x01 

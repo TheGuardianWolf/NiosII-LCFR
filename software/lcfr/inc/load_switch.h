@@ -8,7 +8,7 @@
 #ifndef SWITCHES_H_
 #define SWITCHES_H_
 
-void Task_loadSwitch(void *pvParameters);
+#define LOAD_SWITCH_MAX 5
 
 
 #endif /* SWITCHES_H_ */
