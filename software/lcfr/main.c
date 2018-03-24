@@ -1,3 +1,5 @@
+#define DEBUG 1
+
 /* Standard includes. */
 #include <stddef.h>
 #include <stdio.h>
@@ -10,6 +12,7 @@
 
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 void init();
 
@@ -17,8 +20,7 @@ void init();
  * Create the demo tasks then start the scheduler.
  */
 int main(void) {
-	init();
-	LoadSwitch_createTask();
+	LoadSwitch_start();
 
 	/* Finally start the scheduler. */
 	vTaskStartScheduler();

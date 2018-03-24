@@ -4,6 +4,7 @@
 #include "altera_up_avalon_video_character_buffer_with_dma.h"
 #include "altera_up_avalon_video_pixel_buffer_dma.h"
 
+}
 void init_VGA(){
 	//reset the display
 	alt_up_pixel_buffer_dma_dev *pixel_buf;
