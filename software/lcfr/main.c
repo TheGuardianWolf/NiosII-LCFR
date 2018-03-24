@@ -5,10 +5,13 @@
 #include <system.h>
 
 #include "load_switch.h"
-#include "user_interface.h"
+#include "keyboard.h"
+#include "vga.h"
 
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
+
+void init();
 
 /*
  * Create the demo tasks then start the scheduler.
@@ -26,5 +29,6 @@ int main(void) {
 }
 
 void init() {
-	init_interface();
+	init_VGA();
+	init_kb();
 }
