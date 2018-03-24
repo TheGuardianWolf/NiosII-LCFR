@@ -4,6 +4,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "system.h"
 
 #include "load_switch.h"
 
@@ -22,6 +23,12 @@ static void Task_loadSwitch(void *pvParameters) {
 		uint8_t i;
 		for (i = 0; i < LOAD_SWITCH_MAX; i++) {
 			loadStates[i] = (switchValue >> i) & 1;
+			if (i == LOAD_SWITCH_MAX - 1){
+				printf("%d\n",loadStates[i]);
+			}
+			else {
+				printf("%d",loadStates[i]);
+			}
 		}
 
 		vTaskDelayUntil(&xLastWakeTime, xFrequency);
