@@ -31,6 +31,6 @@ int main(void) {
 }
 
 void init() {
-	init_VGA();
-	init_kb();
+	VGA_start();
+	KB_start();
 }

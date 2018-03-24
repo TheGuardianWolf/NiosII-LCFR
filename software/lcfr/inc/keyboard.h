@@ -13,7 +13,7 @@
 #include "sys/alt_irq.h"
 
 void ps2_isr(void* ps2_device, alt_u32 id);
-void init_kb();
+void KB_start();
 
 
 #endif /* KEYBOARD_H_ */

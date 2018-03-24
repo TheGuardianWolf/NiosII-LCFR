@@ -18,7 +18,7 @@ void ps2_isr(void* ps2_device, alt_u32 id){
 	printf("Scan code: %x\n", keyInput);
 }
 
-void init_kb(){
+void KB_start(){
 	//enable interrupt for keyboard
 	alt_up_ps2_dev * ps2_kb = alt_up_ps2_open_dev(PS2_NAME);
 	alt_up_ps2_enable_read_interrupt(ps2_kb);
