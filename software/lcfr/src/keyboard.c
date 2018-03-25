@@ -5,15 +5,13 @@
  *      Author: chris
  */
 #include <stdio.h>
-#include <unistd.h>
-#include "system.h"
 #include "altera_up_avalon_ps2.h"
 #include "altera_avalon_pio_regs.h"
 #include "sys/alt_irq.h"
 
 static unsigned char keyInput;
 
-void ps2_isr(void* ps2_device, alt_u32 id){
+static void ps2_isr(void* ps2_device, alt_u32 id){
 	alt_up_ps2_read_data_byte_timeout(ps2_device, &keyInput);
 	printf("Scan code: %x\n", keyInput);
 }

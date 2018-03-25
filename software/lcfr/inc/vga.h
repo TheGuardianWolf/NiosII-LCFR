@@ -10,6 +10,4 @@
 
 void VGA_start();
 
-
-
 #endif /* VGA_H_ */
