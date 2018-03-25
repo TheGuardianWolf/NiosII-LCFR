@@ -6,16 +6,14 @@
 #include <string.h>
 #include <system.h>
 
-#include "switch.h"
-#include "button.h"
-#include "frequency_analyzer.h"
-#include "led.h"
-#include "load_manager.h"
-#include "user_interface.h"
+#include "keyboard.h"
+#include "vga.h"
 
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+void init();
 
 /*
  * Create the demo tasks then start the scheduler.
@@ -32,4 +30,9 @@ int main(void) {
 	/* Will only reach here if there is insufficient heap available to start
 	 the scheduler. */
 	for (;;);
+}
+
+void init() {
+	VGA_start();
+	KB_start();
 }

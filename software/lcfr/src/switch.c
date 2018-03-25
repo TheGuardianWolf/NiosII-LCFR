@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <altera_avalon_pio_regs.h>
+#include <system.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
