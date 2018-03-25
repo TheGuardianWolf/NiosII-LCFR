@@ -5,13 +5,27 @@
  *      Author: lichk
  */
 
-#ifndef MANAGED_RELAY_H_
-#define MANAGED_RELAY_H_
+#ifndef LOAD_MANAGER_H_
+#define LOAD_MANAGER_H_
 
+#include <stdbool.h>
 
-void Task_loadManager(void *pvParameters);
+#define LOAD_MANAGER_PERIOD 25
+#define LOAD_MANAGER_LOADS 5
+#define LOAD_MANAGER_GRACE 500
 
+typedef enum {
+	DISABLED,
+	SHED,
+	ENABLED
+} ManagedState;
 
+void LoadManager_start();
 
+bool LoadManager_getActive();
 
-#endif /* MANAGED_RELAY_H_ */
+void LoadManager_toggleActive();
+
+ManagedState LoadManager_getState(uint8_t i);
+
+#endif /* LOAD_MANAGER_H_ */

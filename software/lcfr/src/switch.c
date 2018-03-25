@@ -4,13 +4,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "load_switch.h"
+#include "switch.h"
 
-static const TickType_t xFrequency = 50 * portTICK_PERIOD_MS;
+static const TickType_t xFrequency = SWITCH_PERIOD * portTICK_PERIOD_MS;
 
-static bool loadState[5] = {true, true, true, true, true};
+static bool state[5] = {true, true, true, true, true};
 
-static void Task_loadSwitch(void *pvParameters) {
+static void Task_switch(void *pvParameters) {
 	TickType_t xLastWakeTime;
 
 	while (1) {
@@ -19,8 +19,8 @@ static void Task_loadSwitch(void *pvParameters) {
 		uint8_t switchValue = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
 
 		uint8_t i;
-		for (i = 0; i < LOAD_SWITCH_MAX; i++) {
-			loadState[i] = (switchValue >> i) & 1;
+		for (i = 0; i < SWITCH_COUNT; i++) {
+			state[i] = (switchValue >> i) & 1;
 		}
 
 #if DEBUG == 1
@@ -33,10 +33,10 @@ static void Task_loadSwitch(void *pvParameters) {
 	}
 }
 
-void LoadSwitch_start() {
-	xTaskCreate(Task_loadSwitch, "LoadSwitch", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+void Switch_start() {
+	xTaskCreate(Task_switch, "switch", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
 }
 
-bool LoadSwitch_getState(uint8_t i) {
-	return loadState[i];
+bool Switch_getState(uint8_t i) {
+	return state[i];
 }
