@@ -9,7 +9,15 @@
 #define USER_INTERFACE_H_
 
 
-void ps2_isr(void* ps2_device, alt_u32 id);
+#include <stdint.h>
+
+void ps2_isr(void* ps2_device, uint32_t id);
+
+void UserInterface_start();
+
+void VGA_start();
+
+void KB_start();
 
 
 
