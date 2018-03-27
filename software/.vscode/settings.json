@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.html.txt": "html",
+        "load_manager.h": "c"
+    }
+}
