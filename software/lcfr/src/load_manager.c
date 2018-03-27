@@ -28,7 +28,8 @@ static int8_t managedLoadsCount = LOAD_MANAGER_LOADS;
 
 static void graceTimerCallback(xTimerHandle t_timer) {
 	gracePeriod = false;
-	xQueueSend(xLoadManagerQueue, EVENT_LOAD_MANAGER_GRACE_EXPIRED, 10);
+	uint8_t event = EVENT_LOAD_MANAGER_GRACE_EXPIRED;
+	xQueueSend(xLoadManagerQueue, &event, 10);
 }
 
 static void graceTimerReset() {
@@ -83,122 +84,122 @@ static void updateStateFromSwitch() {
 
 static void Task_loadManager(void *pvParameters) {
 	uint8_t event;
+	uint8_t i;
 	
 	while (1) {
-		xQueueReceive(xLoadManagerQueue, &event, portMAX_DELAY);
-
-		if (event == EVENT_BUTTON_PRESSED) {
-			maintainanceMode = !maintainanceMode;
-			if (maintainanceMode) {
-				updateStateFromSwitch();
+		if (xQueueReceive(xLoadManagerQueue, &event, portMAX_DELAY) == pdTRUE) {
+			if (event == EVENT_BUTTON_PRESSED) {
+				maintainanceMode = !maintainanceMode;
+				if (maintainanceMode) {
+					updateStateFromSwitch();
+				}
 			}
-		}
-		else if (event == EVENT_FREQUENCY_ANALYZER_STABLE) {
-			sheddingLoads = false;
-			if (!maintainanceMode) {
-				if (gracePeriod) {
-					if (enabledLoadsCount < managedLoadsCount) {
-						graceTimerReset();
+			else if (event == EVENT_FREQUENCY_ANALYZER_STABLE) {
+				sheddingLoads = false;
+				if (!maintainanceMode) {
+					if (gracePeriod) {
+						if (enabledLoadsCount < managedLoadsCount) {
+							graceTimerReset();
+						}
+						else {
+							graceTimerStop();
+						}
 					}
 					else {
-						graceTimerStop();
-					}
-				}
-				else {
-					if (enabledLoadsCount < managedLoadsCount) {
-						graceTimerReset();
+						if (enabledLoadsCount < managedLoadsCount) {
+							graceTimerReset();
+						}
 					}
 				}
 			}
-		}
-		else if (event == EVENT_FREQUENCY_ANALYZER_UNSTABLE) {
-			sheddingLoads = true;
-			if (!maintainanceMode) {
-				if (gracePeriod) {
-					if (enabledLoadsCount > 0) {
-						graceTimerReset();
+			else if (event == EVENT_FREQUENCY_ANALYZER_UNSTABLE) {
+				sheddingLoads = true;
+				if (!maintainanceMode) {
+					if (gracePeriod) {
+						if (enabledLoadsCount > 0) {
+							graceTimerReset();
+						}
+						else {
+							graceTimerStop();
+						}
 					}
 					else {
-						graceTimerStop();
+						if (enabledLoadsCount > 1) {
+							shedLoad();
+							graceTimerReset();
+						}
+						else if (enabledLoadsCount == 1) {
+							shedLoad();
+						}
 					}
+				}
+			}
+			else if (event >= EVENT_SWITCH_ON(0) && event <= EVENT_SWITCH_ON(4)) {
+				if (maintainanceMode) {
+					updateStateFromSwitch();
 				}
 				else {
-					if (enabledLoadsCount > 1) {
-						shedLoad();
-						graceTimerReset();
-					}
-					else if (enabledLoadsCount == 1) {
-						shedLoad();
-					}
-				}
-			}
-		}
-		else if (event >= EVENT_SWITCH_ON(0) && event <= EVENT_SWITCH_ON(4)) {
-			if (maintainanceMode) {
-				updateStateFromSwitch();
-			}
-			else {
-				uint8_t i = event - EVENT_SWITCH_ON(0);
-				if (i < LOAD_MANAGER_LOADS) {
-					if (!sheddingLoads && state[i] == DISABLED) {
-						state[i] = ENABLED;
-						managedLoadsCount++;
-						enabledLoadsCount++;
+					i = event - EVENT_SWITCH_ON(0);
+					if (i < LOAD_MANAGER_LOADS) {
+						if (!sheddingLoads && state[i] == DISABLED) {
+							state[i] = ENABLED;
+							managedLoadsCount++;
+							enabledLoadsCount++;
+						}
 					}
 				}
 			}
-		}
-		else if (event >= EVENT_SWITCH_OFF(0) && event <= EVENT_SWITCH_OFF(4)) {
-			uint8_t i = event - EVENT_SWITCH_OFF(0);
-			if (maintainanceMode) {
-				updateStateFromSwitch();
-			}
-			else {
-				uint8_t i = event - EVENT_SWITCH_OFF(0);
-				if (i < LOAD_MANAGER_LOADS) {
-					if (state[i] == ENABLED) {
-						state[i] = DISABLED;
-						managedLoadsCount--;
-						enabledLoadsCount--;
-						if (gracePeriod) {
-							if (managedLoadsCount == 0) {
-								graceTimerReset();
+			else if (event >= EVENT_SWITCH_OFF(0) && event <= EVENT_SWITCH_OFF(4)) {
+				if (maintainanceMode) {
+					updateStateFromSwitch();
+				}
+				else {
+					i = event - EVENT_SWITCH_OFF(0);
+					if (i < LOAD_MANAGER_LOADS) {
+						if (state[i] == ENABLED) {
+							state[i] = DISABLED;
+							managedLoadsCount--;
+							enabledLoadsCount--;
+							if (gracePeriod) {
+								if (managedLoadsCount == 0) {
+									graceTimerReset();
+								}
+								else {
+									graceTimerStop();
+								}
 							}
-							else {
+						}
+						else if (state[i] == SHED) {
+							state[i] = DISABLED;
+							managedLoadsCount--;
+						}
+					}
+				}
+			}
+			else if (event == EVENT_LOAD_MANAGER_GRACE_EXPIRED) {
+				// May seem redundant to check it, but accounts for when events
+				// stored in queue gets outdated before they are processed
+				if (!gracePeriod) {
+					if (!maintainanceMode) {
+						if (sheddingLoads) {
+							if (managedLoadsCount > 1) {
+								shedLoad();
+								// graceTimerReset
+							}
+							else if (managedLoadsCount == 1) {
+								shedLoad();
 								graceTimerStop();
 							}
 						}
-					}
-					else if (state[i] == SHED) {
-						state[i] = DISABLED;
-						managedLoadsCount--;
-					}
-				}
-			}
-		}
-		else if (event == EVENT_LOAD_MANAGER_GRACE_EXPIRED) {
-			// May seem redundant to check it, but accounts for when events
-			// stored in queue gets outdated before they are processed
-			if (!gracePeriod) {
-				if (!maintainanceMode) {
-					if (sheddingLoads) {
-						if (managedLoadsCount > 1) {
-							shedLoad();
-							// graceTimerReset
-						}
-						else if (managedLoadsCount == 1) {
-							shedLoad();
-							graceTimerStop();
-						}
-					}
-					else {
-						if (enabledLoadsCount < managedLoadsCount - 1) {
-							enableLoad();
-							// graceTimerReset();
-						}
-						else if (enabledLoadsCount == managedLoadsCount - 1) {
-							enableLoad();
-							graceTimerStop();
+						else {
+							if (enabledLoadsCount < managedLoadsCount - 1) {
+								enableLoad();
+								// graceTimerReset();
+							}
+							else if (enabledLoadsCount == managedLoadsCount - 1) {
+								enableLoad();
+								graceTimerStop();
+							}
 						}
 					}
 				}

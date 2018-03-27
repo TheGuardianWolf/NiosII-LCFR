@@ -27,7 +27,8 @@ static void ISR_frequencyAnalyzer() {
     newStablity = (newSample.instant < config[0] || newSample.instant > config[1] || newSample.derivative > config[2]);
 
     if (newStablity != stablity) {
-        xQueueSendFromISR(LoadManager_getQueueHandle(), stablity ? EVENT_FREQUENCY_ANALYZER_UNSTABLE : EVENT_FREQUENCY_ANALYZER_STABLE, NULL);
+        uint8_t event = stablity ? EVENT_FREQUENCY_ANALYZER_UNSTABLE : EVENT_FREQUENCY_ANALYZER_STABLE;
+        xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
     }
 
 	stablity = newStablity;

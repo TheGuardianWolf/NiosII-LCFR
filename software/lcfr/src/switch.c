@@ -16,6 +16,7 @@ static bool state[5] = {true, true, true, true, true};
 static void Task_switch(void *pvParameters) {
 	TickType_t xLastWakeTime;
 	bool newState;
+	uint8_t event;
 
 	while (1) {
 		xLastWakeTime = xTaskGetTickCount();
@@ -26,7 +27,8 @@ static void Task_switch(void *pvParameters) {
 		for (i = 0; i < SWITCH_COUNT; i++) {
 			newState = (switchValue >> i) & 1;
 			if (newState != state[i]) {
-				xQueueSend(LoadManager_getQueueHandle(), state[i] ? EVENT_SWITCH_OFF(i) : EVENT_SWITCH_ON(i), 10);
+				event = state[i] ? EVENT_SWITCH_OFF(i) : EVENT_SWITCH_ON(i);
+				xQueueSend(LoadManager_getQueueHandle(), &event, 10);
 			}
 		}
 

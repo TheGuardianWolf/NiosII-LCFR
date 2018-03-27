@@ -12,7 +12,8 @@ static void ISR_button() {
 	uint8_t buttonValue = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE);
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7);
 
-	xQueueSendFromISR(LoadManager_getQueueHandle, EVENT_BUTTON_PRESSED, NULL);
+	uint8_t event = EVENT_BUTTON_PRESSED;
+	xQueueSendFromISR(LoadManager_getQueueHandle, &event, NULL);
 }
 
 void Button_start() {
