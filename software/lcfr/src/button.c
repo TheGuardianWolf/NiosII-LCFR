@@ -14,6 +14,9 @@ static void ISR_button() {
 
 	uint8_t event = EVENT_BUTTON_PRESSED;
 	xQueueSendFromISR(LoadManager_getQueueHandle, &event, NULL);
+#if DEBUG == 0
+	printf("Button\n");
+#endif
 }
 
 void Button_start() {

@@ -1,5 +1,5 @@
 #define DEBUG 1
-
+#include "stdio.h"
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

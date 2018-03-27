@@ -17,11 +17,12 @@ static void Task_switch(void *pvParameters) {
 	TickType_t xLastWakeTime;
 	bool newState;
 	uint8_t event;
+	uint8_t switchValue;
 
 	while (1) {
 		xLastWakeTime = xTaskGetTickCount();
 
-		uint8_t switchValue = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
+		switchValue = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
 
 		uint8_t i;
 		for (i = 0; i < SWITCH_COUNT; i++) {
@@ -30,12 +31,13 @@ static void Task_switch(void *pvParameters) {
 				event = state[i] ? EVENT_SWITCH_OFF(i) : EVENT_SWITCH_ON(i);
 				xQueueSend(LoadManager_getQueueHandle(), &event, 10);
 			}
+			state[i] = newState;
 		}
 
 #if DEBUG == 1
 		printf("Task_loadSwitch ran at %u\n", xLastWakeTime);
-		printf("Current switch state is [%u, %u, %u, %u, %u]",
-				loadState[0], loadState[1], loadState[2], loadState[3], loadState[4]);
+		printf("Current switch state is [%u, %u, %u, %u, %u]\n",
+				state[0], state[1], state[2], state[3], state[4]);
 #endif
 
 		vTaskDelayUntil(&xLastWakeTime, xFrequency);

@@ -24,10 +24,10 @@ static void Task_LED(void *pvParameters) {
 			loadState = LoadManager_getState(i);
 			switch (loadState) {
 				case ENABLED:
-					redLEDValue &= (0x1 << i);
+					redLEDValue |= (0x1 << i);
 					break;
 				case SHED:
-					greenLEDValue &= (0x1 << i);
+					greenLEDValue |= (0x1 << i);
 					break;
 				default:
 					break;

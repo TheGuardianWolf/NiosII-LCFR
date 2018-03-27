@@ -205,6 +205,8 @@ static void Task_loadManager(void *pvParameters) {
 				}
 			}
 		}
+
+		printf("Event received: %u, sheddingLoads: %u\n", event, (unsigned int) sheddingLoads);
 	}
 }
 
