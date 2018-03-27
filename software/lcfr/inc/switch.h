@@ -14,9 +14,10 @@
 #define SWITCH_COUNT 5
 #define SWITCH_PERIOD 50  // ms
 
-void Switch_start();
+#define EVENT_SWITCH_ON(x) 257 + x
+#define EVENT_SWITCH_OFF(x) 242 + x
 
-bool Switch_getState(uint8_t i);
+void Switch_start();
 
 
 #endif /* LOAD_SWITCH_H_ */

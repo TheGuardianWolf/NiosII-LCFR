@@ -8,33 +8,32 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/semphr.h"
+#include "freertos/queue.h"
 
 #include "frequency_analyzer.h"
-
-static SemaphoreHandle_t sampleLock;
+#include "load_manager.h"
 
 static FrequencySample currentSample;
+static bool stablity = true;
+static float config[3] = {45.0f, 55.0f, 1.0f};
 
 static void ISR_frequencyAnalyzer() {
-	FrequencySample newSample;
-	newSample.adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0);
-	newSample.instant = FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / newSample.adcSamples;
-	newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((currentSample.adcSamples + newSample.adcSamples) / 2);
+    FrequencySample newSample;
+    bool newStablity;
+    newSample.adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0);
+    newSample.instant = FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / newSample.adcSamples;
+    newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((currentSample.adcSamples + newSample.adcSamples) / 2);
 
-	xSemaphoreTakeFromISR(sampleLock, NULL);
+    newStablity = (newSample.instant < config[0] || newSample.instant > config[1] || newSample.derivative > config[2]);
+
+    if (newStablity != stablity) {
+        xQueueSendFromISR(LoadManager_getQueueHandle(), stablity ? EVENT_FREQUENCY_ANALYZER_UNSTABLE : EVENT_FREQUENCY_ANALYZER_STABLE, NULL);
+    }
+
+	stablity = newStablity;
 	currentSample = newSample;
-	xSemaphoreGiveFromISR(sampleLock, NULL);
 }
 
 void FrequencyAnalyzer_start() {
-	sampleLock = xSemaphoreCreateBinary();
-	alt_irq_register(FREQUENCY_ANALYSER_IRQ, NULL, ISR_frequencyAnalyzer);
-}
-
-FrequencySample FrequencyAnalyzer_getFrequencySample() {
-	xSemaphoreTake(sampleLock, portMAX_DELAY);
-	FrequencySample sample = currentSample;
-	xSemaphoreGive(sampleLock);
-	return sample;
+    alt_irq_register(FREQUENCY_ANALYSER_IRQ, NULL, ISR_frequencyAnalyzer);
 }

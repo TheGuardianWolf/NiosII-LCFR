@@ -13,12 +13,10 @@
 
 #define BUTTON_COUNT 1
 
-typedef void (*ButtonEventHandler)(void);
+#define EVENT_BUTTON_PRESSED 252
+
+// typedef void (*ButtonEventHandler)(void);
 
 void Button_start();
-
-void Button_ISRAttachHook(uint8_t i, ButtonEventHandler handler);
-
-void Button_ISRDetatchHook(uint8_t i);
 
 #endif /* BUTTON_H_ */

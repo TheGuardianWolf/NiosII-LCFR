@@ -10,21 +10,22 @@
 
 #include <stdbool.h>
 
-#define LOAD_MANAGER_PERIOD 25
+#include "freertos/queue.h"
+
 #define LOAD_MANAGER_LOADS 5
 #define LOAD_MANAGER_GRACE 500
 
+#define EVENT_LOAD_MANAGER_GRACE_EXPIRED 255
+
 typedef enum {
 	DISABLED,
-	SHED,
-	ENABLED
+	ENABLED,
+	SHED
 } ManagedState;
 
 void LoadManager_start();
 
-bool LoadManager_getActive();
-
-void LoadManager_toggleActive();
+QueueHandle_t LoadManager_getQueueHandle();
 
 ManagedState LoadManager_getState(uint8_t i);
 

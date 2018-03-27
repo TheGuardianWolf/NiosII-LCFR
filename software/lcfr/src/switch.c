@@ -4,8 +4,10 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 
 #include "switch.h"
+#include "load_manager.h"
 
 static const TickType_t xFrequency = SWITCH_PERIOD * portTICK_PERIOD_MS;
 
@@ -13,6 +15,7 @@ static bool state[5] = {true, true, true, true, true};
 
 static void Task_switch(void *pvParameters) {
 	TickType_t xLastWakeTime;
+	bool newState;
 
 	while (1) {
 		xLastWakeTime = xTaskGetTickCount();
@@ -21,7 +24,10 @@ static void Task_switch(void *pvParameters) {
 
 		uint8_t i;
 		for (i = 0; i < SWITCH_COUNT; i++) {
-			state[i] = (switchValue >> i) & 1;
+			newState = (switchValue >> i) & 1;
+			if (newState != state[i]) {
+				xQueueSend(LoadManager_getQueueHandle(), state[i] ? EVENT_SWITCH_OFF(i) : EVENT_SWITCH_ON(i), 10);
+			}
 		}
 
 #if DEBUG == 1
@@ -35,6 +41,12 @@ static void Task_switch(void *pvParameters) {
 }
 
 void Switch_start() {
+	uint8_t switchValue = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
+	uint8_t i;
+	for (i = 0; i < SWITCH_COUNT; i++) {
+		state[i] = (switchValue >> i) & 1;
+	}
+
 	xTaskCreate(Task_switch, "switch", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
 }
 

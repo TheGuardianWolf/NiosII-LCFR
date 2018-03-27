@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "*.html.txt": "html",
-        "load_manager.h": "c"
+        "load_manager.h": "c",
+        "freertos.h": "c",
+        "stdbool.h": "c"
     }
 }
