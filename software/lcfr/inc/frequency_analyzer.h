@@ -6,6 +6,8 @@
 #define EVENT_FREQUENCY_ANALYZER_STABLE 254
 #define EVENT_FREQUENCY_ANALYZER_UNSTABLE 253
 
+#include <system.h>
+
 typedef struct {
 	uint32_t adcSamples;
 	float instant;

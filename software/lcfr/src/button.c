@@ -20,5 +20,7 @@ static void ISR_button() {
 }
 
 void Button_start() {
+	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7);
+	IOWR_ALTERA_AVALON_PIO_IRQ_MASK(PUSH_BUTTON_BASE, 0x7);
 	alt_irq_register(PUSH_BUTTON_IRQ, NULL, ISR_button);
 }

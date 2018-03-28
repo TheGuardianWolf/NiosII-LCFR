@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 #include "freertos/queue.h"
+#include "system.h"
 
 #define LOAD_MANAGER_LOADS 5
 #define LOAD_MANAGER_GRACE 500

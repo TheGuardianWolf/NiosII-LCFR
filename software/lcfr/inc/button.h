@@ -10,6 +10,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <system.h>
 
 #define BUTTON_COUNT 1
 

@@ -32,7 +32,7 @@ static void ISR_frequencyAnalyzer() {
     	firstMeasurement = false;
     }
 
-	newStablity = (newSample.instant > config[0] || newSample.instant < config[1] || newSample.derivative < config[2]);
+	newStablity = (newSample.instant > config[0] && newSample.instant < config[1] && newSample.derivative < config[2]);
 
 	if (newStablity != stablity) {
 		uint8_t event = stablity ? EVENT_FREQUENCY_ANALYZER_UNSTABLE : EVENT_FREQUENCY_ANALYZER_STABLE;
@@ -41,7 +41,7 @@ static void ISR_frequencyAnalyzer() {
 	stablity = newStablity;
 	currentSample = newSample;
 
-#if DEBUG == 0
+#if DEBUG == 1
 		printf("ISR Frequency Analyzer Executed\n");
 		printf("samples: %u, instant: %f, derivative: %f\n", newSample.adcSamples, newSample.instant, newSample.derivative);
 #endif

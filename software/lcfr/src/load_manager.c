@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <altera_avalon_pio_regs.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -91,6 +92,7 @@ static void Task_loadManager(void *pvParameters) {
 	while (1) {
 		if (xQueueReceive(xLoadManagerQueue, &event, portMAX_DELAY) == pdTRUE) {
 			if (event == EVENT_BUTTON_PRESSED) {
+				printf("Mchange\n");
 				maintainanceMode = !maintainanceMode;
 				if (maintainanceMode) {
 					managementMode = false;
@@ -220,6 +222,12 @@ static void Task_loadManager(void *pvParameters) {
 }
 
 void LoadManager_start() {
+	uint8_t switchValue = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
+	uint8_t i;
+	for (i = 0; i < SWITCH_COUNT; i++) {
+		state[i] = (ManagedState) ((switchValue >> i) & 1);
+	}
+
 	xLoadManagerQueue = xQueueCreate(16, sizeof(uint8_t));
 	graceTimer = xTimerCreate("graceTimer", xGraceTimerFrequency, pdTRUE, NULL, graceTimerCallback);
 	xTaskCreate(Task_loadManager, "loadManager", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
