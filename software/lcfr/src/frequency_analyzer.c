@@ -21,25 +21,28 @@ static bool firstMeasurement = true;
 static void ISR_frequencyAnalyzer() {
     FrequencySample newSample;
     bool newStablity;
-    bool firstMeasurementBuffer = true;
+
     newSample.adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0);
     newSample.instant = FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / newSample.adcSamples;
-    if (firstMeasurement == false) {
-    	newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
-    }
 
-    if (currentSample.instant == 0.0f) {
-    	firstMeasurement = false;
-    }
+	newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
 
-	newStablity = (newSample.instant > config[0] && newSample.instant < config[1] && newSample.derivative < config[2]);
+	if (!firstMeasurement) {
+		newStablity = (newSample.instant > config[0] && newSample.instant < config[1] && newSample.derivative < config[2]);
+	}
+	else {
+		newStablity = true;
+	}
 
 	if (newStablity != stablity) {
-		uint8_t event = stablity ? EVENT_FREQUENCY_ANALYZER_UNSTABLE : EVENT_FREQUENCY_ANALYZER_STABLE;
+		uint8_t event = newStablity ? EVENT_FREQUENCY_ANALYZER_STABLE : EVENT_FREQUENCY_ANALYZER_UNSTABLE;
 		xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
 	}
+
 	stablity = newStablity;
 	currentSample = newSample;
+
+	firstMeasurement = false;
 
 #if DEBUG == 1
 		printf("ISR Frequency Analyzer Executed\n");
