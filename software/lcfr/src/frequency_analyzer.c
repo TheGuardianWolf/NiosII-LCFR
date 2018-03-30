@@ -9,16 +9,21 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "system.h"
 
 #include "frequency_analyzer.h"
 #include "load_manager.h"
+#include "display.h"
+#include "VGA.h"
 
 static FrequencySample currentSample;
 static bool stablity = true;
 static float config[3] = {45.0f, 55.0f, 10.0f};
+static struct display_info display;
 static bool firstMeasurement = true;
 
 static void ISR_frequencyAnalyzer() {
+	//printf("enter freq ");
     FrequencySample newSample;
     bool newStablity;
 
@@ -41,12 +46,16 @@ static void ISR_frequencyAnalyzer() {
 
 	stablity = newStablity;
 	currentSample = newSample;
-
 	firstMeasurement = false;
+
+	display.stable = newStablity;
+	display.freq = newSample.instant;
+
+	xQueueSendFromISR(VGA_getQueueHandle(), &display, NULL);
 
 #if DEBUG == 1
 		printf("ISR Frequency Analyzer Executed\n");
-		printf("samples: %u, instant: %f, derivative: %f\n", newSample.adcSamples, newSample.instant, newSample.derivative);
+		printf("samples: %u, instant: %f, derivative: %f\n", newSample.adcSamples, display.freq, newSample.derivative);
 #endif
 }
 

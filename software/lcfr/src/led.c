@@ -6,10 +6,12 @@
 
 #include "led.h"
 #include "load_manager.h"
+#include "system.h"
 
 static const TickType_t xFrequency = LED_PERIOD * portTICK_PERIOD_MS;
 
 static void Task_LED(void *pvParameters) {
+	printf("enter led");
 	TickType_t xLastWakeTime;
 
 	while (1) {
@@ -46,5 +48,5 @@ static void Task_LED(void *pvParameters) {
 }
 
 void LED_start() {
-	xTaskCreate(Task_LED, "led", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+	xTaskCreate(Task_LED, "led", configMINIMAL_STACK_SIZE, NULL, 3, NULL);
 }

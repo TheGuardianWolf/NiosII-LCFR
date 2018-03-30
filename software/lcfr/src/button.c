@@ -7,6 +7,7 @@
 
 #include "button.h"
 #include "load_manager.h"
+#include "system.h"
 
 static void ISR_button() {
 	uint8_t buttonValue = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE);

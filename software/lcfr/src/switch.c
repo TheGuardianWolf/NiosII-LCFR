@@ -7,12 +7,14 @@
 
 #include "switch.h"
 #include "load_manager.h"
+#include "system.h"
 
 static const TickType_t xFrequency = SWITCH_PERIOD * portTICK_PERIOD_MS;
 
 static bool state[5] = {true, true, true, true, true};
 
 static void Task_switch(void *pvParameters) {
+	printf("enter switch");
 	TickType_t xLastWakeTime;
 	bool newState;
 	uint8_t event;
@@ -50,7 +52,7 @@ void Switch_start() {
 		state[i] = (switchValue >> i) & 1;
 	}
 
-	xTaskCreate(Task_switch, "switch", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+	xTaskCreate(Task_switch, "switch", configMINIMAL_STACK_SIZE, NULL, 4, NULL);
 }
 
 bool Switch_getState(uint8_t i) {

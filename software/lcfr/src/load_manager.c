@@ -9,6 +9,7 @@
 #include "switch.h"
 #include "button.h"
 #include "frequency_analyzer.h"
+#include "system.h"
 
 static const TickType_t xGraceTimerFrequency = LOAD_MANAGER_GRACE * portTICK_PERIOD_MS;
 static QueueHandle_t xLoadManagerQueue;

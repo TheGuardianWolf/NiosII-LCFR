@@ -2,7 +2,8 @@
 #define CONFIG_H_
 
 enum config_type {
-	freq,
+	upper_freq,
+	lower_freq,
 	change_in_freq
 };
 
