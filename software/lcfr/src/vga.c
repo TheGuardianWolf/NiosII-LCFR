@@ -13,6 +13,7 @@
 #include "FreeRTOS/queue.h"
 
 #include "VGA.h"
+#include "keyboard.h"
 
 //For frequency plot
 #define FREQPLT_ORI_X 101		//x axis pixel position at the plot origin
@@ -78,12 +79,19 @@ void PRVGADraw_Task(void *pvParameters ){
 	struct display_info display_array[100];
 	int i = 99, j = 0;
 	Line line_freq, line_roc;
+	unsigned char key;
 
 	struct display_info display;
 	TickType_t xLastWakeTime;
 
 	while(1){
 		xLastWakeTime = xTaskGetTickCount();
+
+		if(xSemaphoreTake(KB_getQueueHandle(), portMAX_DELAY) == pdTRUE) {
+			key = getKey();
+			xSemaphoreGive(getKeySemaphore());
+		}
+
 		//receive frequency data from queue
 		if (xQueueReceive(xVGAQueue, &display, portMAX_DELAY) == pdTRUE) {
 

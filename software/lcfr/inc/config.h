@@ -2,13 +2,12 @@
 #define CONFIG_H_
 
 enum config_type {
-	upper_freq,
 	lower_freq,
 	change_in_freq
 };
 
 typedef struct config {
-	config_type type;
+	enum config_type type;
 	unsigned int id;
 	int value;
 };
