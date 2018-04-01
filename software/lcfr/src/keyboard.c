@@ -86,8 +86,16 @@ unsigned char getKey() {
 	return keyBufferVGA;
 }
 
+struct config getConfig() {
+	return config_info;
+}
+
 SemaphoreHandle_t getKeySemaphore() {
 	return shared_keys_sem;
+}
+
+SemaphoreHandle_t getConfigSemaphore() {
+	return shared_config_sem;
 }
 
 void change_type() {

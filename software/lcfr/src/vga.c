@@ -76,10 +76,12 @@ void PRVGADraw_Task(void *pvParameters ){
 	alt_up_char_buffer_string(char_buf, "Change in Frequency Threshold: ", 4, 50);
 
 	float freq[100], dfreq[100];
-	struct display_info display_array[100];
+	//struct display_info display_array[100];
 	int i = 99, j = 0;
 	Line line_freq, line_roc;
 	unsigned char key;
+	unsigned char* key_array;
+
 
 	struct display_info display;
 	TickType_t xLastWakeTime;
@@ -120,6 +122,12 @@ void PRVGADraw_Task(void *pvParameters ){
 
 			i =	++i%100; //point to the next data (oldest) to be overwritten
 
+		}
+
+
+
+		if(key >= '0' && key <= '9') {
+			alt_up_char_buffer_string(char_buf, key, 19, 46);
 		}
 
 		//clear old graph to draw new graph

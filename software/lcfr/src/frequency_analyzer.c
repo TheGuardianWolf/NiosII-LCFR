@@ -15,10 +15,12 @@
 #include "load_manager.h"
 #include "display.h"
 #include "VGA.h"
+#include "keyboard.h"
 
 static FrequencySample currentSample;
 static bool stablity = true;
 static float config[3] = {45.0f, 55.0f, 10.0f};
+static struct config configReceive;
 static struct display_info display;
 static bool firstMeasurement = true;
 
@@ -32,6 +34,20 @@ static void ISR_frequencyAnalyzer() {
 
 	newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
 
+	//get config semaphore and take the config data
+	if (xSemaphoreTake(getConfigSemaphore(), portMAX_DELAY) == pdTRUE) {
+		configReceive = getConfig();
+		xSemaphoreGive(getConfigSemaphore());
+
+		if (configReceive.type == lower_freq) {
+			config[0] = (float)configReceive.value;
+		}
+		else {
+			config[2] = (float)configReceive.value;
+		}
+	}
+
+	//check if it's the first measurement, if it is then ignore readings.
 	if (!firstMeasurement) {
 		newStablity = (newSample.instant > config[0] && newSample.instant < config[1] && newSample.derivative < config[2]);
 	}
