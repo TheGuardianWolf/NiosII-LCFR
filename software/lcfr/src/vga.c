@@ -14,6 +14,7 @@
 
 #include "VGA.h"
 #include "keyboard.h"
+#include "config.h"
 
 //For frequency plot
 #define FREQPLT_ORI_X 101		//x axis pixel position at the plot origin
@@ -44,6 +45,7 @@ typedef struct{
 static alt_up_pixel_buffer_dma_dev *pixel_buf;
 static alt_up_char_buffer_dev *char_buf;
 static const TickType_t xFrequency = VGA_PERIOD * portTICK_PERIOD_MS;
+static enum config_type current_type = lower_freq;
 
 /****** VGA display ******/
 
@@ -74,14 +76,20 @@ void PRVGADraw_Task(void *pvParameters ){
 	alt_up_char_buffer_string(char_buf, "System Status: ", 4, 46);
 	alt_up_char_buffer_string(char_buf, "Lower Frequency Threshold: ", 4, 48);
 	alt_up_char_buffer_string(char_buf, "Change in Frequency Threshold: ", 4, 50);
+	alt_up_char_buffer_string(char_buf, "Enter New Lower Frequency Threshold: ", 38, 48);
+	alt_up_char_buffer_string(char_buf, "Enter Change in Frequency Threshold: ", 40, 50);
 
 	float freq[100], dfreq[100];
 	//struct display_info display_array[100];
 	int i = 99, j = 0;
 	Line line_freq, line_roc;
 	unsigned char key;
-	unsigned char* key_array;
-
+	unsigned char* current_key_array_lower = "45";
+	unsigned char* current_key_array_change = "10";
+	unsigned char key_array_lower[16];
+	unsigned char key_array_change[16];
+	unsigned int lower_i = 0;
+	unsigned int change_i = 0;
 
 	struct display_info display;
 	TickType_t xLastWakeTime;
@@ -124,11 +132,40 @@ void PRVGADraw_Task(void *pvParameters ){
 
 		}
 
-
-
 		if(key >= '0' && key <= '9') {
-			alt_up_char_buffer_string(char_buf, key, 19, 46);
+			if(current_type == lower_freq) {
+				key_array_lower[lower_i] = key;
+				lower_i++;
+			}
+			else {
+				key_array_change[change_i] = key;
+				change_i++;
+			}
 		}
+		else if(key == 10) {
+			int j;
+			current_key_array_lower = &key_array_lower;
+			if (current_type == lower_freq) {
+				for (j = 0; j < 16; j++) {
+					key_array_lower[j] = '';
+				}
+				lower_i = 0;
+			}
+			else {
+				for (j = 0; j < 16; j++) {
+					key_array_change[j] = '';
+				}
+				change_i = 0;
+			}
+		}
+		else {
+			change_type();
+		}
+
+		alt_up_char_buffer_string(char_buf, current_key_array_lower, 32, 48);
+		alt_up_char_buffer_string(char_buf, current_key_array_change, 35, 50);
+		alt_up_char_buffer_string(char_buf, &key_array_lower, 77, 48);
+		alt_up_char_buffer_string(char_buf, &key_array_change, 77, 50);
 
 		//clear old graph to draw new graph
 		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 0, 639, 199, 0, 0);
@@ -164,6 +201,15 @@ void PRVGADraw_Task(void *pvParameters ){
 
 QueueHandle_t VGA_getQueueHandle() {
 	return xVGAQueue;
+}
+
+void change_type() {
+	if (current_type == lower_freq) {
+		current_type = change_in_freq;
+	}
+	else {
+		current_type = lower_freq;
+	}
 }
 
 void VGA_start(){
