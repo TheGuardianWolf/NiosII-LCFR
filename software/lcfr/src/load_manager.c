@@ -232,6 +232,7 @@ void LoadManager_start() {
 	xLoadManagerQueue = xQueueCreate(16, sizeof(uint8_t));
 	graceTimer = xTimerCreate("graceTimer", xGraceTimerFrequency, pdTRUE, NULL, graceTimerCallback);
 	xTaskCreate(Task_loadManager, "loadManager", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+	printf("finished LM init");
 }
 
 QueueHandle_t LoadManager_getQueueHandle() {

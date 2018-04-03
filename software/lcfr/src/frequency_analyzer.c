@@ -9,17 +9,19 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/semphr.h"
 #include "system.h"
 
 #include "frequency_analyzer.h"
 #include "load_manager.h"
 #include "display.h"
+#include "config.h"
 #include "VGA.h"
 #include "keyboard.h"
 
 static FrequencySample currentSample;
 static bool stablity = true;
-static float config[3] = {45.0f, 55.0f, 10.0f};
+static float config_values[3] = {45.0f, 55.0f, 10.0f};
 static struct config configReceive;
 static struct display_info display;
 static bool firstMeasurement = true;
@@ -36,20 +38,20 @@ static void ISR_frequencyAnalyzer() {
 
 	//get config semaphore and take the config data
 	if (xSemaphoreTake(getConfigSemaphore(), portMAX_DELAY) == pdTRUE) {
-		configReceive = getConfig();
+		//configReceive = getConfig();
 		xSemaphoreGive(getConfigSemaphore());
 
 		if (configReceive.type == lower_freq) {
-			config[0] = (float)configReceive.value;
+			config_values[0] = (float)configReceive.value;
 		}
 		else {
-			config[2] = (float)configReceive.value;
+			config_values[2] = (float)configReceive.value;
 		}
 	}
 
 	//check if it's the first measurement, if it is then ignore readings.
 	if (!firstMeasurement) {
-		newStablity = (newSample.instant > config[0] && newSample.instant < config[1] && newSample.derivative < config[2]);
+		newStablity = (newSample.instant > config_values[0] && newSample.instant < config_values[1] && newSample.derivative < config_values[2]);
 	}
 	else {
 		newStablity = true;
@@ -77,4 +79,5 @@ static void ISR_frequencyAnalyzer() {
 
 void FrequencyAnalyzer_start() {
     alt_irq_register(FREQUENCY_ANALYSER_IRQ, NULL, ISR_frequencyAnalyzer);
+	printf("finished FA init");
 }

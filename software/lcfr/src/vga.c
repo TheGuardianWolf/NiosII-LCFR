@@ -11,6 +11,7 @@
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "FreeRTOS/queue.h"
+#include "FreeRTOS/semphr.h"
 
 #include "VGA.h"
 #include "keyboard.h"
@@ -83,11 +84,11 @@ void PRVGADraw_Task(void *pvParameters ){
 	//struct display_info display_array[100];
 	int i = 99, j = 0;
 	Line line_freq, line_roc;
-	unsigned char key;
-	unsigned char* current_key_array_lower = "45";
-	unsigned char* current_key_array_change = "10";
-	unsigned char key_array_lower[16];
-	unsigned char key_array_change[16];
+	char key;
+	char* current_key_array_lower = "45";
+	char* current_key_array_change = "10";
+	char key_array_lower[16];
+	char key_array_change[16];
 	unsigned int lower_i = 0;
 	unsigned int change_i = 0;
 
@@ -147,19 +148,19 @@ void PRVGADraw_Task(void *pvParameters ){
 			current_key_array_lower = &key_array_lower;
 			if (current_type == lower_freq) {
 				for (j = 0; j < 16; j++) {
-					key_array_lower[j] = '';
+					key_array_lower[j] = '\0';
 				}
 				lower_i = 0;
 			}
 			else {
 				for (j = 0; j < 16; j++) {
-					key_array_change[j] = '';
+					key_array_change[j] = '\0';
 				}
 				change_i = 0;
 			}
 		}
 		else {
-			change_type();
+			change_VGA_type();
 		}
 
 		alt_up_char_buffer_string(char_buf, current_key_array_lower, 32, 48);
@@ -203,7 +204,7 @@ QueueHandle_t VGA_getQueueHandle() {
 	return xVGAQueue;
 }
 
-void change_type() {
+void change_VGA_type() {
 	if (current_type == lower_freq) {
 		current_type = change_in_freq;
 	}
@@ -231,4 +232,5 @@ void VGA_start(){
 
 	//Create queue for display
 	xVGAQueue = xQueueCreate( 100, sizeof(struct display_info));
+	printf("finished VGA init");
 }

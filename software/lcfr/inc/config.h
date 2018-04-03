@@ -10,7 +10,7 @@ typedef struct config {
 	enum config_type type;
 	unsigned int id;
 	int value;
-};
+} config;
 
 
 #endif /* CONFIG_H_ */
