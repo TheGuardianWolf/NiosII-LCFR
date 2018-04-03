@@ -33,31 +33,34 @@ static QueueHandle_t xKeyboardQueue;
 
 static void ps2_isr(void* ps2_device, alt_u32 id){
 	decode_status = decode_scancode (ps2_device, &decode_mode , &keyInput_keycode , &keyInput_decoded);
-	printf("status: %d\n", decode_status);
+	//printf("status: %d\n", decode_status);
 	//check if decoded key input is equal to 0 cause of bug where the ISR is entered multiple times from 1 key press
 	if (decode_status == 0 && keyInput_decoded != 0) {
-		if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_decoded == 9) || (keyInput_decoded == 10)) {
-			xQueueSendFromISR(xKeyboardQueue, &keyInput_decoded, NULL);
-		}
-        // print out the result
-//        switch ( decode_mode )
-//        {
-//          case KB_ASCII_MAKE_CODE :
-//            printf ( "ASCII   : %x\n", keyInput_keycode ) ;
-//            break ;
-//          case KB_LONG_BINARY_MAKE_CODE :
-//            // do nothing
-//          case KB_BINARY_MAKE_CODE :
-//            printf ( "MAKE CODE : %x\n", keyInput_keycode ) ;
-//            break ;
-//          case KB_BREAK_CODE :
-//            // do nothing
-//          default :
-//            printf ( "DEFAULT   : %x\n", keyInput_keycode ) ;
-//            break ;
-//        }
+        //print out the result
+        switch ( decode_mode )
+        {
+          case KB_ASCII_MAKE_CODE :
+            printf ( "ASCII   : %x\n", keyInput_keycode );
+            printf ( "ASCII   : %x\n", keyInput_decoded );
+    		if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_decoded == 9) || (keyInput_decoded == 10)) {
+    			printf("%d", xQueueSendFromISR(xKeyboardQueue, &keyInput_decoded, NULL)==pdTRUE);
+    		}
+            break ;
+          case KB_LONG_BINARY_MAKE_CODE :
+            // do nothing
+          case KB_BINARY_MAKE_CODE :
+            printf ( "MAKE CODE : %x\n", keyInput_keycode );
+            printf ( "MAKE CODE   : %x\n", keyInput_decoded );
+            break ;
+          case KB_BREAK_CODE :
+            // do nothing
+          default :
+            printf ( "DEFAULT   : %x\n", keyInput_keycode );
+            printf ( "DEFAULT   : %x\n", keyInput_decoded );
+            break ;
+        }
 	}
-#if DEBUG == 0
+#if DEBUG == 1
 	printf("Inputted: %x \n",keyInput_decoded);
 #endif
 }
