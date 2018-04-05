@@ -19,7 +19,7 @@ static void init() {
 //	Button_start();
 //	LED_start();
 //	FrequencyAnalyzer_start();
-//	LoadManager_start();
+///	LoadManager_start();
 }
 
 /*

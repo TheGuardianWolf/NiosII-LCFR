@@ -11,13 +11,16 @@
 #include "altera_up_ps2_keyboard.h"
 #include "sys/alt_irq.h"
 #include "system.h"
+#include <unistd.h>
 
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 #include "config.h"
+#include "keyboard.h"
 
+static alt_up_ps2_dev * ps2_kb;
 static enum config_type current_type;
 static KB_CODE_TYPE decode_mode;
 static int decode_status;
@@ -30,30 +33,43 @@ static char keyBuffer[16];
 static SemaphoreHandle_t shared_keys_sem;
 static SemaphoreHandle_t shared_config_sem;
 static QueueHandle_t xKeyboardQueue;
+static const TickType_t xFrequency = KB_PERIOD * portTICK_PERIOD_MS;
+
+//flag for ignoring key presses
+static bool flag = false;
+
 
 static void ps2_isr(void* ps2_device, alt_u32 id){
 	decode_status = decode_scancode (ps2_device, &decode_mode , &keyInput_keycode , &keyInput_decoded);
 	//printf("status: %d\n", decode_status);
 	//check if decoded key input is equal to 0 cause of bug where the ISR is entered multiple times from 1 key press
-	if (decode_status == 0 && keyInput_decoded != 0) {
+	if (decode_status == 0 && keyInput_decoded != 0 && decode_mode != KB_BREAK_CODE) {
+        flag = !flag;
         //print out the result
         switch ( decode_mode )
         {
           case KB_ASCII_MAKE_CODE :
-            printf ( "ASCII   : %x\n", keyInput_keycode );
-            printf ( "ASCII   : %x\n", keyInput_decoded );
-    		if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_decoded == 9) || (keyInput_decoded == 10)) {
-    			printf("%d", xQueueSendFromISR(xKeyboardQueue, &keyInput_decoded, NULL)==pdTRUE);
-    		}
-            break ;
+            if(flag == true)
+            {
+            	printf ( "ASCII MAKE  : %x\n", keyInput_keycode );
+            	printf ( "ASCII MAKE  : %c\n", keyInput_decoded );
+
+            	if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_decoded == 9) || (keyInput_decoded == 10)) {
+            		printf("%d \n", xQueueSendFromISR(xKeyboardQueue, &keyInput_decoded, NULL)==pdTRUE);
+            	}
+            	break ;
+            }
           case KB_LONG_BINARY_MAKE_CODE :
+        	  break;
             // do nothing
           case KB_BINARY_MAKE_CODE :
             printf ( "MAKE CODE : %x\n", keyInput_keycode );
             printf ( "MAKE CODE   : %x\n", keyInput_decoded );
             break ;
           case KB_BREAK_CODE :
-            // do nothing
+              printf ( "BREAK CODE : %x\n", keyInput_keycode );
+              printf ( "BREAK CODE   : %x\n", keyInput_decoded );
+              break;
           default :
             printf ( "DEFAULT   : %x\n", keyInput_keycode );
             printf ( "DEFAULT   : %x\n", keyInput_decoded );
@@ -68,8 +84,12 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
 void KB_Task(void *pvParameters ) {
 	char keyBufferTemp;
 	unsigned int i;
+	int DELETE_THIS = 0;
 	struct config config_info_temp;
+	TickType_t xLastWakeTime;
 	while(1) {
+		//xLastWakeTime = xTaskGetTickCount();
+		printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
 		if(xQueueReceive(xKeyboardQueue, &keyBufferTemp, portMAX_DELAY) == pdTRUE) {
 			if(xSemaphoreTake(shared_config_sem, portMAX_DELAY) == pdTRUE) {
 				keyBufferVGA = keyBufferTemp;
@@ -83,6 +103,7 @@ void KB_Task(void *pvParameters ) {
 				i++;
 			}
 			else if (keyBufferTemp == 10){
+				printf("10");
 				int j;
 				for (j = 0; j < i + 1; j++) {
 					config_info_temp.value += keyBuffer[j] * ((i - j + 1) * 10);
@@ -103,7 +124,11 @@ void KB_Task(void *pvParameters ) {
 					keyBuffer[j] = 0;
 				}
 				i = 0;
+				printf("10");
 			}
+		}
+		else {
+			printf("queueFAILED");
 		}
 	}
 }
@@ -139,12 +164,13 @@ void change_type() {
 
 void KB_start(){
 	//enable interrupt for keyboard
-	alt_up_ps2_dev * ps2_kb = alt_up_ps2_open_dev(PS2_NAME);
+	ps2_kb = alt_up_ps2_open_dev(PS2_NAME);
 	alt_up_ps2_clear_fifo (ps2_kb) ;
 
 	alt_irq_register(PS2_IRQ, ps2_kb, ps2_isr);
 	// register the PS/2 interrupt
 	IOWR_8DIRECT(PS2_BASE,4,1);
+
 	//Create draw task
 	xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 1, NULL );
 
