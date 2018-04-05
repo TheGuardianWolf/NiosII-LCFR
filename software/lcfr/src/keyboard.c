@@ -34,6 +34,7 @@ static SemaphoreHandle_t shared_keys_sem;
 static SemaphoreHandle_t shared_config_sem;
 static QueueHandle_t xKeyboardQueue;
 static const TickType_t xFrequency = KB_PERIOD * portTICK_PERIOD_MS;
+TaskHandle_t xHandle;
 
 //flag for ignoring key presses
 static bool flag = false;
@@ -82,16 +83,17 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
 }
 
 void KB_Task(void *pvParameters ) {
+	xHandle = xTaskGetCurrentTaskHandle();
 	char keyBufferTemp;
 	unsigned int i;
-	int DELETE_THIS = 0;
 	struct config config_info_temp;
 	TickType_t xLastWakeTime;
 	while(1) {
 		//xLastWakeTime = xTaskGetTickCount();
+		printf("hi");
 		printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
 		if(xQueueReceive(xKeyboardQueue, &keyBufferTemp, portMAX_DELAY) == pdTRUE) {
-			if(xSemaphoreTake(shared_config_sem, portMAX_DELAY) == pdTRUE) {
+			if(xSemaphoreTake(shared_keys_sem, portMAX_DELAY) == pdTRUE) {
 				keyBufferVGA = keyBufferTemp;
 				printf("Received: %c \n",keyBufferTemp);
 				xSemaphoreGive(shared_keys_sem);
@@ -127,11 +129,10 @@ void KB_Task(void *pvParameters ) {
 				printf("10");
 			}
 		}
-		else {
-			printf("queueFAILED");
-		}
+		vTaskDelay(1000);
 	}
 }
+
 
 QueueHandle_t KB_getQueueHandle() {
 	return xKeyboardQueue;
@@ -162,6 +163,8 @@ void change_type() {
 	}
 }
 
+
+
 void KB_start(){
 	//enable interrupt for keyboard
 	ps2_kb = alt_up_ps2_open_dev(PS2_NAME);
@@ -185,5 +188,5 @@ void KB_start(){
 
 	current_type = lower_freq;
 
-	printf("finished KB init");
+	printf("finished KB init\n");
 }
