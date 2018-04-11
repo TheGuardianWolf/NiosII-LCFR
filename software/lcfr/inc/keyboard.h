@@ -16,7 +16,7 @@ void KB_getKeyBuffer(char* buf);
 
 void KB_setKeyBuffer(char* buf);
 
-void KB_setKey(char k, size_t keyIndex);
+void KB_setKey(size_t keyIndex, char k);
 
 
 #endif /* KEYBOARD_H_ */

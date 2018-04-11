@@ -9,7 +9,7 @@ enum config_type {
 typedef struct config {
 	enum config_type type;
 	unsigned int id;
-	int value;
+	float value;
 } config;
 
 

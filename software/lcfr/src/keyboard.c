@@ -13,19 +13,22 @@
 #include "system.h"
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
+#include <math.h>
 
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 #include "config.h"
+#include "frequency_analyzer.h"
 #include "keyboard.h"
 
 static alt_up_ps2_dev * ps2_kb;
 static enum config_type current_type;
 static KB_CODE_TYPE decode_mode;
 static int decode_status;
-static unsigned char keyInput_keycode = 0;
+static char keyInput_keycode = 0;
 static char keyInput_decoded;
 static char keyBuffer[KB_KEYBUFFER_SIZE];
 static SemaphoreHandle_t xKeyBufferSemaphore;
@@ -38,7 +41,7 @@ static bool flag = false;
 static void ps2_isr(void* ps2_device, alt_u32 id){
 	decode_status = decode_scancode (ps2_device, &decode_mode , &keyInput_keycode , &keyInput_decoded);
 	//check if decoded key input is equal to 0 cause of bug where the ISR is entered multiple times from 1 key press
-	if (decode_status == 0 && keyInput_decoded != 0 && decode_mode != KB_BREAK_CODE) {
+	if (decode_status == 0 && decode_mode != KB_BREAK_CODE) {
         flag = !flag;
         //print out the result
         switch ( decode_mode )
@@ -46,11 +49,8 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
           case KB_ASCII_MAKE_CODE :
             if(flag == true)
             {
-            	printf ( "ASCII MAKE  : %x\n", keyInput_keycode );
-            	printf ( "ASCII MAKE  : %c\n", keyInput_decoded );
-
-            	if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_decoded == 9) || (keyInput_decoded == 10)) {
-            		printf("%d \n", xQueueSendFromISR(xKeyboardQueue, &keyInput_decoded, NULL)==pdTRUE);
+            	if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_keycode == 0xd) || (keyInput_keycode == 0x5a)) {
+            		xQueueSendFromISR(xKeyboardQueue, &keyInput_decoded, NULL);
             	}
             	break ;
             }
@@ -58,12 +58,13 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
         	  break;
             // do nothing
           case KB_BINARY_MAKE_CODE :
-            printf ( "MAKE CODE : %x\n", keyInput_keycode );
-            printf ( "MAKE CODE   : %x\n", keyInput_decoded );
+        	  if(flag == true) {
+        		  if ((keyInput_keycode == 0xd) || (keyInput_keycode == 0x5a)) {
+        			xQueueSendFromISR(xKeyboardQueue, &keyInput_keycode, NULL);
+        		  }
+        	  }
             break ;
           case KB_BREAK_CODE :
-              printf ( "BREAK CODE : %x\n", keyInput_keycode );
-              printf ( "BREAK CODE   : %x\n", keyInput_decoded );
               break;
           default :
             printf ( "DEFAULT   : %x\n", keyInput_keycode );
@@ -88,25 +89,31 @@ static void change_type() {
 void KB_Task(void *pvParameters ) {
 	xHandle = xTaskGetCurrentTaskHandle();
 	char keyBufferTemp;
-	unsigned int i;
-	struct config config_info_temp;
+	unsigned int i = 0;
+	struct config config_info_temp = {
+		.type = current_type,
+		.value = 0.0f
+	};
 	while(1) {
-		printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
+		//printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
 		if(xQueueReceive(xKeyboardQueue, &keyBufferTemp, portMAX_DELAY) == pdTRUE) {
 			if (keyBufferTemp >= '0' && keyBufferTemp <= '9') {
-				keyBuffer[i] = keyBufferTemp - '0';
-				printf("Char: %d\n", keyBuffer[i]);
+				printf("Char: %d\n", keyBufferTemp - '0');
+				xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
+				keyBuffer[i] = keyBufferTemp;
+				xSemaphoreGive(xKeyBufferSemaphore);
+				KB_setKey(i, keyBufferTemp);
+				printf("Char: %d\n", keyBuffer[i] - '0');
 				i++;
 			}
-			else if (keyBufferTemp == 10){
-				printf("10");
-				int j;
-				for (j = 0; j < i + 1; j++) {
-					config_info_temp.value += keyBuffer[j] * ((i - j + 1) * 10);
-				}
+			else if (keyBufferTemp == 0x5a){
+				KB_setKey(i, '\0');
+				printf("i: %d\n",i);
+				config_info_temp.value = (float)atof(keyBuffer);
 				config_info_temp.type = current_type;
+				printf("%f\n", config_info_temp.value);
 
-				FrequencyAnalyzer_setConfig(config_info_temp);
+				FrequencyAnalyzer_setConfig(config_info_temp.type, config_info_temp.value);
 
 				i = 0;
 			}
@@ -117,7 +124,7 @@ void KB_Task(void *pvParameters ) {
 					keyBuffer[j] = 0;
 				}
 				i = 0;
-				printf("10");
+				printf("tab?\n");
 			}
 		}
 	}
@@ -135,7 +142,7 @@ void KB_setKeyBuffer(char* buf) {
 	xSemaphoreGive(xKeyBufferSemaphore);
 }
 
-void KB_setKey(char k, size_t keyIndex) {
+void KB_setKey(size_t keyIndex, char k) {
 	xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
 	keyBuffer[keyIndex] = k;
 	xSemaphoreGive(xKeyBufferSemaphore);
@@ -157,7 +164,7 @@ void KB_start(){
 	xKeyboardQueue = xQueueCreate( 16, sizeof(char));
 
 	//create the binary semaphore for the keys variable
-	xKeyBufferSemaphore = xSemaphoreCreateBinary();
+	xKeyBufferSemaphore = xSemaphoreCreateMutex();
 
 	current_type = lower_freq;
 }

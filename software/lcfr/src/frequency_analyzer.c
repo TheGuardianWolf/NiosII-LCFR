@@ -42,7 +42,7 @@ static void ISR_frequencyAnalyzer() {
 
 	if (newStablity != stablity) {
 		uint8_t event = newStablity ? EVENT_FREQUENCY_ANALYZER_STABLE : EVENT_FREQUENCY_ANALYZER_UNSTABLE;
-		xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
+		//xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
 	}
 
 	stablity = newStablity;
@@ -55,10 +55,10 @@ static void ISR_frequencyAnalyzer() {
 		.derivative = newSample.derivative
 	};
 
-	xQueueSendFromISR(VGA_getQueueHandle(), &vgaFreqInfo, NULL);
+	//xQueueSendFromISR(VGA_getQueueHandle(), &vgaFreqInfo, NULL);
 #if DEBUG == 1
 		printf("ISR Frequency Analyzer Executed\n");
-		printf("samples: %u, instant: %f, derivative: %f\n", newSample.adcSamples, display.freq, newSample.derivative);
+		printf("samples: %u, instant: %f, derivative: %f\n", newSample.adcSamples, vgaFreqInfo.freq, vgaFreqInfo.derivative);
 #endif
 }
 

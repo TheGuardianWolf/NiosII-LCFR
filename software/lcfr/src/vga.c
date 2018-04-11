@@ -10,6 +10,8 @@
 
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
+#include "FreeRTOS/semphr.h"
+#include "FreeRTOS/queue.h"
 
 #include "VGA.h"
 #include "keyboard.h"
@@ -95,10 +97,7 @@ void PRVGADraw_Task(void *pvParameters ){
 	while(1){
 		xLastWakeTime = xTaskGetTickCount();
 
-		if(xSemaphoreTake(KB_getQueueHandle(), portMAX_DELAY) == pdTRUE) {
-			key = getKey();
-			xSemaphoreGive(getKeySemaphore());
-		}
+		//key = KB_getKeyBuffer();
 
 		//receive frequency data from queue
 		if (xQueueReceive(xVGAQueue, &display, portMAX_DELAY) == pdTRUE) {

@@ -18,7 +18,7 @@ static void init() {
 //	Switch_start();
 //	Button_start();
 //	LED_start();
-//	FrequencyAnalyzer_start();
+	FrequencyAnalyzer_start();
 ///	LoadManager_start();
 }
 
