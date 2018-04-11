@@ -42,7 +42,6 @@ static bool flag = false;
 
 static void ps2_isr(void* ps2_device, alt_u32 id){
 	decode_status = decode_scancode (ps2_device, &decode_mode , &keyInput_keycode , &keyInput_decoded);
-	//printf("status: %d\n", decode_status);
 	//check if decoded key input is equal to 0 cause of bug where the ISR is entered multiple times from 1 key press
 	if (decode_status == 0 && keyInput_decoded != 0 && decode_mode != KB_BREAK_CODE) {
         flag = !flag;
@@ -82,6 +81,15 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
 #endif
 }
 
+static void change_type() {
+	if (current_type == lower_freq) {
+		current_type = change_in_freq;
+	}
+	else {
+		current_type = lower_freq;
+	}
+}
+
 void KB_Task(void *pvParameters ) {
 	xHandle = xTaskGetCurrentTaskHandle();
 	char keyBufferTemp;
@@ -89,13 +97,10 @@ void KB_Task(void *pvParameters ) {
 	struct config config_info_temp;
 	TickType_t xLastWakeTime;
 	while(1) {
-		//xLastWakeTime = xTaskGetTickCount();
-		printf("hi");
 		printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
 		if(xQueueReceive(xKeyboardQueue, &keyBufferTemp, portMAX_DELAY) == pdTRUE) {
 			if(xSemaphoreTake(shared_keys_sem, portMAX_DELAY) == pdTRUE) {
 				keyBufferVGA = keyBufferTemp;
-				printf("Received: %c \n",keyBufferTemp);
 				xSemaphoreGive(shared_keys_sem);
 			}
 
@@ -112,10 +117,7 @@ void KB_Task(void *pvParameters ) {
 				}
 				config_info_temp.type = current_type;
 
-				if(xSemaphoreTake(shared_config_sem, portMAX_DELAY) == pdTRUE) {
-					config_info = config_info_temp;
-					xSemaphoreGive(shared_config_sem);
-				}
+				FrequencyAnalyzer_setConfig(config_info_temp);
 
 				i = 0;
 			}
@@ -129,7 +131,6 @@ void KB_Task(void *pvParameters ) {
 				printf("10");
 			}
 		}
-		vTaskDelay(1000);
 	}
 }
 
@@ -154,17 +155,6 @@ SemaphoreHandle_t getConfigSemaphore() {
 	return shared_config_sem;
 }
 
-void change_type() {
-	if (current_type == lower_freq) {
-		current_type = change_in_freq;
-	}
-	else {
-		current_type = lower_freq;
-	}
-}
-
-
-
 void KB_start(){
 	//enable interrupt for keyboard
 	ps2_kb = alt_up_ps2_open_dev(PS2_NAME);
@@ -180,13 +170,11 @@ void KB_start(){
 	//Create queue for display
 	xKeyboardQueue = xQueueCreate( 16, sizeof(char));
 
-	//create the counting semaphore for the keys variable
-	shared_keys_sem = xSemaphoreCreateCounting( 9999, 1 );
+	//create the binary semaphore for the keys variable
+	shared_keys_sem = xSemaphoreCreateBinary();
 
-	//create the counting semaphore for the config variable
-	shared_config_sem = xSemaphoreCreateCounting( 9999, 1 );
+	//create the binary semaphore for the config variable
+	shared_config_sem = xSemaphoreCreateBinary();
 
 	current_type = lower_freq;
-
-	printf("finished KB init\n");
 }
