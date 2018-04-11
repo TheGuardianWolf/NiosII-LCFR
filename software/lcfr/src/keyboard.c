@@ -49,7 +49,7 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
           case KB_ASCII_MAKE_CODE :
             if(flag == true)
             {
-            	if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_keycode == 0xd) || (keyInput_keycode == 0x5a)) {
+            	if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_decoded == '.')) {
             		xQueueSendFromISR(xKeyboardQueue, &keyInput_decoded, NULL);
             	}
             }
@@ -97,23 +97,21 @@ void KB_Task(void *pvParameters ) {
 	while(1) {
 		//printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
 		if(xQueueReceive(xKeyboardQueue, &keyBufferTemp, portMAX_DELAY) == pdTRUE) {
-			if (keyBufferTemp >= '0' && keyBufferTemp <= '9') {
-				printf("Char: %d\n", keyBufferTemp - '0');
+			if ((keyBufferTemp >= '0' && keyBufferTemp <= '9' ) || keyBufferTemp == '.') {
 				xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
 				keyBuffer[i] = keyBufferTemp;
 				xSemaphoreGive(xKeyBufferSemaphore);
 				KB_setKey(i, keyBufferTemp);
-				printf("Char: %d\n", keyBuffer[i] - '0');
 				i++;
 			}
 			else if (keyBufferTemp == 0x5a){
 				KB_setKey(i, '\0');
-				printf("i: %d\n",i);
 				config_info_temp.value = (float)atof(keyBuffer);
 				config_info_temp.type = current_type;
-				printf("%f\n", config_info_temp.value);
 
 				FrequencyAnalyzer_setConfig(config_info_temp.type, config_info_temp.value);
+				char emptyBuffer[KB_KEYBUFFER_SIZE] = "";
+				KB_setKeyBuffer(emptyBuffer);
 
 				i = 0;
 			}
@@ -124,7 +122,6 @@ void KB_Task(void *pvParameters ) {
 					keyBuffer[j] = 0;
 				}
 				i = 0;
-				printf("tab?\n");
 			}
 		}
 	}

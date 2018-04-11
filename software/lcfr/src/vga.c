@@ -106,14 +106,14 @@ void PRVGADraw_Task(void *pvParameters ){
 		}
 
 		//receive frequency data from queue
-		while (xQueueReceive(xVGAQueue, &receivedFrequencyInfo, portMAX_DELAY) == pdTRUE) {
+		while (xQueueReceive(xVGAQueue, &receivedFrequencyInfo, 0) == pdTRUE) {
 			alt_up_char_buffer_string(char_buf, receivedFrequencyInfo.stable ? "Stable  " : "Unstable", 19, 46);
 			frequencyInfo[i] = receivedFrequencyInfo;
 			i =	++i%100; //point to the next data (oldest) to be overwritten
 		}
 		alt_up_char_buffer_string(char_buf, configValues[0], 32, 48);
 		alt_up_char_buffer_string(char_buf, configValues[1], 35, 50);
-		alt_up_char_buffer_string(char_buf, configValues[2], 35, 50);
+		alt_up_char_buffer_string(char_buf, configValues[2], 35, 52);
 		alt_up_char_buffer_string(char_buf, configType == 0 ? newConfigValue : "", 77, 48);
 		alt_up_char_buffer_string(char_buf, configType == 1 ? newConfigValue : "", 77, 50);
 		alt_up_char_buffer_string(char_buf, configType == 2 ? newConfigValue : "", 77, 52);
@@ -167,9 +167,9 @@ void VGA_start(){
 	}
 	alt_up_char_buffer_clear(char_buf);
 
-	memset(frequencyInfo, 0, sizeof(frequencyInfo));
+//	memset(frequencyInfo, 0, sizeof(frequencyInfo));
 
-	xNewConfigValueSemaphore = xSemaphoreCreateBinary();
+	xNewConfigValueSemaphore = xSemaphoreCreateMutex();
 
 	//Create queue for display
 	xVGAQueue = xQueueCreate( 100, sizeof(VGAFrequencyInfo));

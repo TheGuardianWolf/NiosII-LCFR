@@ -64,7 +64,7 @@ static void ISR_frequencyAnalyzer() {
 
 void FrequencyAnalyzer_start() {
     alt_irq_register(FREQUENCY_ANALYSER_IRQ, NULL, ISR_frequencyAnalyzer);
-	xConfigSemaphore = xSemaphoreCreateBinary();
+	xConfigSemaphore = xSemaphoreCreateMutex();
 	printf("finished FA init");
 }
 
