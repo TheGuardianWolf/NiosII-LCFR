@@ -123,11 +123,6 @@ void KB_Task(void *pvParameters ) {
 	}
 }
 
-
-QueueHandle_t KB_getQueueHandle() {
-	return xKeyboardQueue;
-}
-
 void KB_getKeyBuffer(char* buf) {
 	xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
 	memcpy(buf, keyBuffer, sizeof(keyBuffer));
