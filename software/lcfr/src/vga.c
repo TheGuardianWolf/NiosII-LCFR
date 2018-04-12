@@ -80,10 +80,13 @@ void PRVGADraw_Task(void *pvParameters ){
 	alt_up_char_buffer_string(char_buf, "-30", 9, 34);
 	alt_up_char_buffer_string(char_buf, "-60", 9, 36);
 
+	alt_up_char_buffer_string(char_buf, "Reaction time: ", 38, 48);
+
 	alt_up_char_buffer_string(char_buf, "System Status: ", 4, 46);
 	alt_up_char_buffer_string(char_buf, "Lower Freq Threshold: ", 4, 48);
 	alt_up_char_buffer_string(char_buf, "Upper Freq Threshold: ", 4, 50);
 	alt_up_char_buffer_string(char_buf, "Change in Freq Threshold: ", 4, 52);
+
 	alt_up_char_buffer_string(char_buf, "Enter New Lower Freq Threshold: ", 38, 48);
 	alt_up_char_buffer_string(char_buf, "Enter New Upper Freq Threshold: ", 38, 50);
 	alt_up_char_buffer_string(char_buf, "Enter Change in Freq Threshold: ", 38, 52);
@@ -92,18 +95,26 @@ void PRVGADraw_Task(void *pvParameters ){
 	Line line_freq, line_roc;
 
 	TickType_t xLastWakeTime;
-
+	int k;
 	while(1){
 		xLastWakeTime = xTaskGetTickCount();
 
 		xSemaphoreTake(xNewConfigValueSemaphore, portMAX_DELAY);
 		KB_getKeyBuffer(newConfigValue);
+		size_t newConfigValueLength = strlen(newConfigValue);
+		for (k = newConfigValueLength; k < 5; k++) {
+			newConfigValue[k] = ' ';
+		}
+		if (newConfigValueLength < 5) {
+			newConfigValue[newConfigValueLength] = '_';
+		}
+		newConfigValue[5] = '\0';
 		xSemaphoreGive(xNewConfigValueSemaphore);
 
-		int k;
+
 		for (k = 0; k < VGA_CONFIG_TYPES_COUNT; k++) {
-			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%.2f", FrequencyAnalyzer_getConfig(k));
-//			configValues[k][4] = '\0';
+			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%f", FrequencyAnalyzer_getConfig(k));
+			configValues[k][5] = '\0';
 		}
 
 		//receive frequency data from queue
@@ -116,9 +127,9 @@ void PRVGADraw_Task(void *pvParameters ){
 		alt_up_char_buffer_string(char_buf, configValues[0], 26, 48);
 		alt_up_char_buffer_string(char_buf, configValues[1], 26, 50);
 		alt_up_char_buffer_string(char_buf, configValues[2], 30, 52);
-		alt_up_char_buffer_string(char_buf, configType == 0 ? newConfigValue : "", 71, 48);
-		alt_up_char_buffer_string(char_buf, configType == 1 ? newConfigValue : "", 71, 50);
-		alt_up_char_buffer_string(char_buf, configType == 2 ? newConfigValue : "", 71, 52);
+		alt_up_char_buffer_string(char_buf, configType == 0 ? newConfigValue : "     ", 71, 48);
+		alt_up_char_buffer_string(char_buf, configType == 1 ? newConfigValue : "     ", 71, 50);
+		alt_up_char_buffer_string(char_buf, configType == 2 ? newConfigValue : "     ", 71, 52);
 
 		//clear old graph to draw new graph
 		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 0, 639, 199, 0, 0);

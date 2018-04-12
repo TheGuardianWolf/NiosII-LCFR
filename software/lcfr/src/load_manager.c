@@ -150,6 +150,7 @@ static void Task_loadManager(void *pvParameters) {
 					updateStateFromSwitch();
 				}
 				else {
+//					printf("%d\n", managementMode);
 					i = event - EVENT_SWITCH_ON(0);
 					if (i < LOAD_MANAGER_LOADS) {
 						if (state[i] == DISABLED) {
@@ -207,6 +208,9 @@ static void Task_loadManager(void *pvParameters) {
 								shedLoad();
 								graceTimerStop();
 							}
+							else {
+								graceTimerStop();
+							}
 						}
 						else {
 							if (enabledLoadsCount < managedLoadsCount - 1) {
@@ -216,6 +220,10 @@ static void Task_loadManager(void *pvParameters) {
 							else if (enabledLoadsCount == managedLoadsCount - 1) {
 								managementMode = false;
 								enableLoad();
+								graceTimerStop();
+							}
+							else {
+								managementMode = false;
 								graceTimerStop();
 							}
 						}

@@ -14,7 +14,6 @@ static const TickType_t xFrequency = SWITCH_PERIOD * portTICK_PERIOD_MS;
 static bool state[5] = {true, true, true, true, true};
 
 static void Task_switch(void *pvParameters) {
-	printf("enter switch");
 	TickType_t xLastWakeTime;
 	bool newState;
 	uint8_t event;

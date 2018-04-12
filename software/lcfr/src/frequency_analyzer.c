@@ -19,7 +19,7 @@
 static FrequencySample currentSample;
 static uint32_t newAdcSamples;
 static bool stablity = true;
-static float configValues[3] = {49.0f, 55.0f, 10.0f};
+static float configValues[3] = {49.0f, 55.0f, 100.0f};
 static bool firstMeasurement = true;
 static SemaphoreHandle_t xConfigSemaphore;
 static QueueHandle_t xFrequencyAnalyzerQueue;
