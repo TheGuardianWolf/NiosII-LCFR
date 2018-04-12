@@ -18,9 +18,9 @@ static void ISR_button() {
 	uint32_t timestamp = timestamp();
 
 	Event event = {
-		.code = EVENT_BUTTON_PRESSED;
-		.timestamp = timestamp();
-	}
+		.code = EVENT_BUTTON_PRESSED,
+		.timestamp = timestamp()
+	};
 	xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
 #if DEBUG == 0
 	printf("Button\n");

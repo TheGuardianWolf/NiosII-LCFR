@@ -18,7 +18,7 @@
 #include "event.h"
 
 static FrequencySample currentSample;
-static uint32_t newAdcSamples;
+static ADCSample newAdcSamples;
 static bool stablity = true;
 static float configValues[3] = {49.0f, 55.0f, 100.0f};
 static bool firstMeasurement = true;
@@ -26,7 +26,7 @@ static SemaphoreHandle_t xConfigSemaphore;
 static QueueHandle_t xFrequencyAnalyzerQueue;
 
 static void ISR_frequencyAnalyzer() {
-    ADCSample adcSample {
+    ADCSample adcSample = {
 		.adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0),
 		.timestamp = timestampFromISR()
 	};
@@ -56,11 +56,11 @@ static void Task_frequencyAnalyzer(void *pvParameters) {
 				Event event;
 				if (newStablity) {
 					event.code = EVENT_FREQUENCY_ANALYZER_STABLE;
-					event.timestamp = newSample.timestamp;
+					event.timestamp = newAdcSamples.timestamp;
 				}
 				else {
 					event.code = EVENT_FREQUENCY_ANALYZER_UNSTABLE;
-					event.timestamp = newSample.timestamp;
+					event.timestamp = newAdcSamples.timestamp;
 				}
 				xQueueSend(LoadManager_getQueueHandle(), &event, portMAX_DELAY);
 			}

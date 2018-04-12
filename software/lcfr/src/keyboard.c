@@ -23,6 +23,7 @@
 #include "config.h"
 #include "frequency_analyzer.h"
 #include "keyboard.h"
+#include "vga.h"
 
 static alt_up_ps2_dev * ps2_kb;
 static enum config_type current_type;
@@ -109,7 +110,7 @@ void KB_Task(void *pvParameters ) {
 				KB_setKeyBuffer(emptyBuffer);
 				i = 0;
 				change_type();
-				VGA_nextConfigType();
+				VGA_nextConfigType(true);
 			}
 
 			else if (keyBufferTemp == 0x66){
@@ -122,7 +123,7 @@ void KB_Task(void *pvParameters ) {
 				KB_setKeyBuffer(emptyBuffer);
 				i = 0;
 				change_type();
-				VGA_nextConfigType();
+				VGA_nextConfigType(false);
 			}
 		}
 	}
@@ -155,7 +156,7 @@ void KB_start(){
 	// register the PS/2 interrupt
 	IOWR_8DIRECT(PS2_BASE,4,1);
 
-	xKeyBufferSemaphore = xSemaphoreCreateMutex();
+	xKeyBufferMutex = xSemaphoreCreateMutex();
 
 	//Create queue for display
 	xKeyboardQueue = xQueueCreate( 16, sizeof(char));

@@ -11,7 +11,6 @@
 static const TickType_t xFrequency = LED_PERIOD * portTICK_PERIOD_MS;
 
 static void Task_LED(void *pvParameters) {
-	printf("enter led");
 	TickType_t xLastWakeTime;
 
 	while (1) {

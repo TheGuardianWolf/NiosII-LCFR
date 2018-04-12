@@ -5,6 +5,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
+#include "freertos/semphr.h"
 
 #include "load_manager.h"
 #include "switch.h"
@@ -15,6 +16,8 @@
 
 static const TickType_t xGraceTimerFrequency = LOAD_MANAGER_GRACE * portTICK_PERIOD_MS;
 static QueueHandle_t xLoadManagerQueue;
+
+static SemaphoreHandle_t xReactionTimesMutex;
 
 static bool gracePeriod = false;
 
@@ -39,20 +42,23 @@ static ReactionTimes reactionTimes = {
     .max = 0, 
     .average = 0, 
     .averageSamples = 0 
-} 
+};
 
 static void registerReactionTime(uint32_t then) {
-	uint32_t t = then - timestamp();
-
+	uint32_t now = timestamp();
+	uint32_t t = now - then;
+	xSemaphoreTake(xReactionTimesMutex, portMAX_DELAY);
     if (t < reactionTimes.min) { 
         reactionTimes.min = t; 
     } 
  
     if (t > reactionTimes.max) { 
-        reactionTimes.min = t; 
+        reactionTimes.max = t;
     } 
  
-    reactionTimes.average = (reactionTimes.average * reactionTimes.averageSamples + t) / (reactionTimes.averageSamples++) 
+    reactionTimes.average = (reactionTimes.average * reactionTimes.averageSamples + t) / (reactionTimes.averageSamples + 1);
+    reactionTimes.averageSamples++;
+    xSemaphoreGive(xReactionTimesMutex);
 } 
 
 static void graceTimerCallback(xTimerHandle t_timer) {
@@ -121,6 +127,8 @@ static void Task_loadManager(void *pvParameters) {
 				if (maintainanceMode) {
 					managementMode = false;
 					updateStateFromSwitch();
+//					printf("Current switch state is [%u, %u, %u, %u, %u]\n",
+//							state[0], state[1], state[2], state[3], state[4]);
 				}
 			}
 			else if (event.code == EVENT_FREQUENCY_ANALYZER_STABLE) {
@@ -165,13 +173,15 @@ static void Task_loadManager(void *pvParameters) {
 						else if (enabledLoadsCount == 1) {
 							shedLoad();
 						}
-						registerReactionTime(event.timestamp);
+						//registerReactionTime(event.timestamp);
 					}
 				}
 			}
-			else if (event.code >= EVENT_SWITCH_ON(0) && event <= EVENT_SWITCH_ON(4)) {
+			else if (event.code >= EVENT_SWITCH_ON(0) && event.code <= EVENT_SWITCH_ON(4)) {
 				if (maintainanceMode) {
 					updateStateFromSwitch();
+//					printf("Current switch state is [%u, %u, %u, %u, %u]\n",
+//							state[0], state[1], state[2], state[3], state[4]);
 				}
 				else {
 //					printf("%d\n", managementMode);
@@ -191,9 +201,11 @@ static void Task_loadManager(void *pvParameters) {
 					}
 				}
 			}
-			else if (event.code >= EVENT_SWITCH_OFF(0) && event <= EVENT_SWITCH_OFF(4)) {
+			else if (event.code >= EVENT_SWITCH_OFF(0) && event.code <= EVENT_SWITCH_OFF(4)) {
 				if (maintainanceMode) {
 					updateStateFromSwitch();
+//					printf("Current switch state is [%u, %u, %u, %u, %u]\n",
+//							state[0], state[1], state[2], state[3], state[4]);
 				}
 				else {
 					i = event.code - EVENT_SWITCH_OFF(0);
@@ -266,6 +278,7 @@ void LoadManager_start() {
 	}
 
 	xLoadManagerQueue = xQueueCreate(16, sizeof(Event));
+	xReactionTimesMutex = xSemaphoreCreateMutex();
 	graceTimer = xTimerCreate("graceTimer", xGraceTimerFrequency, pdTRUE, NULL, graceTimerCallback);
 	xTaskCreate(Task_loadManager, "loadManager", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
 }
@@ -278,6 +291,9 @@ ManagedState LoadManager_getState(uint8_t i) {
 	return state[i];
 }
 
-ReactionTime LoadManager_getReactionTimes() { 
+ReactionTimes LoadManager_getReactionTimes() {
+	xSemaphoreTake(xReactionTimesMutex, portMAX_DELAY);
+	ReactionTimes retVal = reactionTimes;
+	xSemaphoreGive(xReactionTimesMutex);
     return reactionTimes; 
 } 

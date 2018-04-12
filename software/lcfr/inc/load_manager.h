@@ -35,6 +35,6 @@ QueueHandle_t LoadManager_getQueueHandle();
 
 ManagedState LoadManager_getState(uint8_t i);
 
-ReactionTime LoadManager_getReactionTimes();
+ReactionTimes LoadManager_getReactionTimes();
 
 #endif /* LOAD_MANAGER_H_ */

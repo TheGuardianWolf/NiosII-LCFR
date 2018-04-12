@@ -7,7 +7,7 @@
 #include "io.h"
 #include "altera_up_avalon_video_character_buffer_with_dma.h"
 #include "altera_up_avalon_video_pixel_buffer_dma.h"
-#include <time.h>
+#include <limits.h>
 
 
 #include "FreeRTOS/FreeRTOS.h"
@@ -59,10 +59,9 @@ static VGAFrequencyInfo receivedFrequencyInfo;
 /****** VGA display ******/
 
 void PRVGADraw_Task(void *pvParameters ){
-	printf("enter vga");
 	alt_up_pixel_buffer_dma_clear_screen(pixel_buf, 0);
 	alt_up_char_buffer_clear(char_buf);
-	ReactionTimes reaction_times;
+	ReactionTimes reactionTimes;
 
 	//Set up plot axes
 	alt_up_pixel_buffer_dma_draw_hline(pixel_buf, 100, 590, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
@@ -109,30 +108,28 @@ void PRVGADraw_Task(void *pvParameters ){
 		xSemaphoreTake(xNewConfigValueMutex, portMAX_DELAY);
 		KB_getKeyBuffer(newConfigValue);
 		size_t newConfigValueLength = strlen(newConfigValue);
-		for (k = newConfigValueLength; k < 5; k++) {
+		for (k = newConfigValueLength; k < 6; k++) {
 			newConfigValue[k] = ' ';
 		}
-		if (newConfigValueLength < 5) {
+		if (newConfigValueLength < 6) {
 			newConfigValue[newConfigValueLength] = (xLastWakeTime % 500 < 250) ? '_' : ' ';
 		}
-		newConfigValue[5] = '\0';
+		newConfigValue[6] = '\0';
 		xSemaphoreGive(xNewConfigValueMutex);
 
 
 		for (k = 0; k < VGA_CONFIG_TYPES_COUNT; k++) {
-			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%f", FrequencyAnalyzer_getConfig(k));
-			configValues[k][5] = '\0';
+			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%6.2f", FrequencyAnalyzer_getConfig(k));
 		}
 
 		//receive frequency data from queue
 		while (xQueueReceive(xVGAQueue, &receivedFrequencyInfo, 0) == pdTRUE) {
 			alt_up_char_buffer_string(char_buf, receivedFrequencyInfo.stable ? "Stable  " : "Unstable", 19, 46);
 			frequencyInfo[i] = receivedFrequencyInfo;
-			//printf("%f\n", receivedFrequencyInfo.derivative);
 			i =	++i%100; //point to the next data (oldest) to be overwritten
 		}
 
-		reaction_times = LoadManager_getReactionTimes();
+		reactionTimes = LoadManager_getReactionTimes();
 
 		alt_up_char_buffer_string(char_buf, configValues[0], 26, 48);
 		alt_up_char_buffer_string(char_buf, configValues[1], 26, 50);
@@ -142,13 +139,24 @@ void PRVGADraw_Task(void *pvParameters ){
 		alt_up_char_buffer_string(char_buf, configType == 2 ? newConfigValue : "     ", 71, 52);
 
 		char sysTime[KB_KEYBUFFER_SIZE];
-		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(reaction_times.max));
-		alt_up_char_buffer_string(char_buf, sysTime, 9, 43);
-		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(reaction_times.min));
-		alt_up_char_buffer_string(char_buf, sysTime, 25, 43);
-		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(reaction_times.average));
-		alt_up_char_buffer_string(char_buf, sysTime, 41, 43);
-		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(xLastWakeTime * portTICK_PERIOD_MS));
+		for (k = 0; k < 3; k++) {
+			uint32_t t = (((uint32_t*)(&reactionTimes))[k]);
+			if (t == UINT_MAX || t == 0) {
+				snprintf(sysTime, sizeof(sysTime), "--------");
+			}
+			else {
+				snprintf(sysTime, sizeof(sysTime), "%8u", (unsigned int)t);
+			}
+			alt_up_char_buffer_string(char_buf, sysTime, 9 + k * 16, 43);
+		}
+
+//		alt_up_char_buffer_string(char_buf, sysTime, 9, 43);
+//		snprintf(sysTime, sizeof(sysTime), "%u", (reactionTimes.min));
+//		printf("min: %s\n", sysTime);
+//		alt_up_char_buffer_string(char_buf, sysTime, 25, 43);
+//		snprintf(sysTime, sizeof(sysTime), "%u", (reactionTimes.average));
+//		alt_up_char_buffer_string(char_buf, sysTime, 41, 43);
+		snprintf(sysTime, sizeof(sysTime), "%8u", (xLastWakeTime * portTICK_PERIOD_MS));
 		alt_up_char_buffer_string(char_buf, sysTime, 59, 43);
 
 		//clear old graph to draw new graph
@@ -210,7 +218,6 @@ void VGA_start(){
 	//Create draw task
 	xTaskCreate( PRVGADraw_Task, "DrawTsk", configMINIMAL_STACK_SIZE, NULL, 1, &PRVGADraw );
 
-	printf("finished VGA init");
 }
 
 void VGA_nextConfigType(bool setValue) {

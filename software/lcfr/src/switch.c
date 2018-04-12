@@ -37,7 +37,7 @@ static void Task_switch(void *pvParameters) {
 			state[i] = newState;
 		}
 
-#if DEBUG == 1
+#if DEBUG == 0
 		printf("Task_loadSwitch ran at %u\n", xLastWakeTime);
 		printf("Current switch state is [%u, %u, %u, %u, %u]\n",
 				state[0], state[1], state[2], state[3], state[4]);
