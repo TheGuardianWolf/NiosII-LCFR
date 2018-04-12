@@ -12,6 +12,7 @@
 #include "sys/alt_irq.h"
 #include "system.h"
 #include <unistd.h>
+#include <string.h>
 
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
@@ -26,19 +27,13 @@ static KB_CODE_TYPE decode_mode;
 static int decode_status;
 static unsigned char keyInput_keycode = 0;
 static char keyInput_decoded;
-static char keyBufferVGA;
-static struct config config_info;
-static char keyBuffer[16];
-//maybe deadlock caused by these 2 semaphores??
-static SemaphoreHandle_t shared_keys_sem;
-static SemaphoreHandle_t shared_config_sem;
+static char keyBuffer[KB_KEYBUFFER_SIZE];
+static SemaphoreHandle_t xKeyBufferSemaphore;
 static QueueHandle_t xKeyboardQueue;
-static const TickType_t xFrequency = KB_PERIOD * portTICK_PERIOD_MS;
 TaskHandle_t xHandle;
 
 //flag for ignoring key presses
 static bool flag = false;
-
 
 static void ps2_isr(void* ps2_device, alt_u32 id){
 	decode_status = decode_scancode (ps2_device, &decode_mode , &keyInput_keycode , &keyInput_decoded);
@@ -95,15 +90,9 @@ void KB_Task(void *pvParameters ) {
 	char keyBufferTemp;
 	unsigned int i;
 	struct config config_info_temp;
-	TickType_t xLastWakeTime;
 	while(1) {
 		printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
 		if(xQueueReceive(xKeyboardQueue, &keyBufferTemp, portMAX_DELAY) == pdTRUE) {
-			if(xSemaphoreTake(shared_keys_sem, portMAX_DELAY) == pdTRUE) {
-				keyBufferVGA = keyBufferTemp;
-				xSemaphoreGive(shared_keys_sem);
-			}
-
 			if (keyBufferTemp >= '0' && keyBufferTemp <= '9') {
 				keyBuffer[i] = keyBufferTemp - '0';
 				printf("Char: %d\n", keyBuffer[i]);
@@ -139,20 +128,22 @@ QueueHandle_t KB_getQueueHandle() {
 	return xKeyboardQueue;
 }
 
-char getKey() {
-	return keyBufferVGA;
+void KB_getKeyBuffer(char* buf) {
+	xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
+	memcpy(buf, keyBuffer, sizeof(keyBuffer));
+	xSemaphoreGive(xKeyBufferSemaphore);
 }
 
-struct config getConfig() {
-	return config_info;
+void KB_setKeyBuffer(char* buf) {
+	xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
+	memcpy(keyBuffer, buf, sizeof(keyBuffer));
+	xSemaphoreGive(xKeyBufferSemaphore);
 }
 
-SemaphoreHandle_t getKeySemaphore() {
-	return shared_keys_sem;
-}
-
-SemaphoreHandle_t getConfigSemaphore() {
-	return shared_config_sem;
+void KB_setKey(char k, size_t keyIndex) {
+	xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
+	keyBuffer[keyIndex] = k;
+	xSemaphoreGive(xKeyBufferSemaphore);
 }
 
 void KB_start(){
@@ -171,10 +162,7 @@ void KB_start(){
 	xKeyboardQueue = xQueueCreate( 16, sizeof(char));
 
 	//create the binary semaphore for the keys variable
-	shared_keys_sem = xSemaphoreCreateBinary();
-
-	//create the binary semaphore for the config variable
-	shared_config_sem = xSemaphoreCreateBinary();
+	xKeyBufferSemaphore = xSemaphoreCreateBinary();
 
 	current_type = lower_freq;
 }

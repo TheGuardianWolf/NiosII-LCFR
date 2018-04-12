@@ -8,10 +8,15 @@
 #ifndef KEYBOARD_H_
 #define KEYBOARD_H_
 
-#define SWITCH_COUNT 5
-#define KB_PERIOD 50  // ms
+#define KB_KEYBUFFER_SIZE 16
 
 void KB_start();
+
+void KB_getKeyBuffer(char* buf);
+
+void KB_setKeyBuffer(char* buf);
+
+void KB_setKey(char k, size_t keyIndex);
 
 
 #endif /* KEYBOARD_H_ */
