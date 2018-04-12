@@ -15,13 +15,13 @@ static void ISR_button() {
 	uint8_t buttonValue = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE);
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7);
 
-	uint32_t timestamp = timestamp();
-
-	Event event = {
-		.code = EVENT_BUTTON_PRESSED,
-		.timestamp = timestamp()
-	};
-	xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
+	if ((buttonValue & 1) == 1) {
+		Event event = {
+			.code = EVENT_BUTTON_PRESSED,
+			.timestamp = timestamp()
+		};
+		xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
+	}
 #if DEBUG == 0
 	printf("Button\n");
 #endif

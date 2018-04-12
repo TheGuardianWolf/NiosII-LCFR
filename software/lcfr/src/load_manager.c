@@ -106,8 +106,13 @@ static void updateStateFromSwitch() {
 	uint8_t i;
 	int8_t enabledLoads = 0;
 
+	bool switchStates[SWITCH_COUNT];
+	Switch_getState(switchStates);
+	printf("Current switch state LM is [%u, %u, %u, %u, %u]\n",
+			switchStates[0], switchStates[1], switchStates[2], switchStates[3], switchStates[4]);
+
 	for (i = 0; i < LOAD_MANAGER_LOADS && i < SWITCH_COUNT; i++) {
-		if (Switch_getState(i)) {
+		if (switchStates[i]) {
 			state[i] = ENABLED;
 			enabledLoads++;
 		}
@@ -300,3 +305,7 @@ ReactionTimes LoadManager_getReactionTimes() {
 	xSemaphoreGive(xReactionTimesMutex);
     return retVal;
 } 
+
+bool LoadManager_isMaintainanceMode() {
+	return maintainanceMode;
+}
