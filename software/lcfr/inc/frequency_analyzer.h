@@ -16,4 +16,8 @@ typedef struct {
 
 void FrequencyAnalyzer_start();
 
+float FrequencyAnalyzer_getConfig(uint8_t configIndex);
+
+void FrequencyAnalyzer_setConfig(uint8_t configIndex, float val);
+
 #endif /* FREQUENCY_ANALYZER_H_ */

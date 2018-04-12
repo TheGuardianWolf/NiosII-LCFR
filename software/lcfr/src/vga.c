@@ -10,8 +10,6 @@
 
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
-#include "FreeRTOS/queue.h"
-#include "FreeRTOS/semphr.h"
 
 #include "VGA.h"
 #include "keyboard.h"
@@ -32,7 +30,6 @@
 
 #define PRVGADraw_Task_P      (tskIDLE_PRIORITY+1)
 TaskHandle_t PRVGADraw;
-
 
 static QueueHandle_t xVGAQueue;
 
@@ -227,10 +224,11 @@ void VGA_start(){
 	}
 	alt_up_char_buffer_clear(char_buf);
 
+	//Create queue for display
+	xVGAQueue = xQueueCreate( 100, sizeof(VGAFrequencyInfo));
+
 	//Create draw task
 	xTaskCreate( PRVGADraw_Task, "DrawTsk", configMINIMAL_STACK_SIZE, NULL, 2, &PRVGADraw );
 
-	//Create queue for display
-	xVGAQueue = xQueueCreate( 100, sizeof(struct display_info));
 	printf("finished VGA init");
 }

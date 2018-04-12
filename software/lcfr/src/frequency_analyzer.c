@@ -22,9 +22,8 @@
 static FrequencySample currentSample;
 static bool stablity = true;
 static float config_values[3] = {45.0f, 55.0f, 10.0f};
-static struct config configReceive;
-static struct display_info display;
 static bool firstMeasurement = true;
+static SemaphoreHandle_t xConfigSemaphore;
 
 static void ISR_frequencyAnalyzer() {
 	//printf("enter freq ");
@@ -35,19 +34,6 @@ static void ISR_frequencyAnalyzer() {
     newSample.instant = FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / newSample.adcSamples;
 
 	newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
-
-	//get config semaphore and take the config data
-	if (xSemaphoreTake(getConfigSemaphore(), portMAX_DELAY) == pdTRUE) {
-		//configReceive = getConfig();
-		xSemaphoreGive(getConfigSemaphore());
-
-		if (configReceive.type == lower_freq) {
-			config_values[0] = (float)configReceive.value;
-		}
-		else {
-			config_values[2] = (float)configReceive.value;
-		}
-	}
 
 	//check if it's the first measurement, if it is then ignore readings.
 	if (!firstMeasurement) {
@@ -66,11 +52,13 @@ static void ISR_frequencyAnalyzer() {
 	currentSample = newSample;
 	firstMeasurement = false;
 
-	display.stable = newStablity;
-	display.freq = newSample.instant;
+	VGAFrequencyInfo vgaFreqInfo = {
+		.stable = newStablity;
+		.freq = newSample.instant;
+		.derivative = newSample.derivative;
+	};
 
-	xQueueSendFromISR(VGA_getQueueHandle(), &display, NULL);
-
+	xQueueSendFromISR(VGA_getQueueHandle(), &vgaFreqInfo, NULL);
 #if DEBUG == 1
 		printf("ISR Frequency Analyzer Executed\n");
 		printf("samples: %u, instant: %f, derivative: %f\n", newSample.adcSamples, display.freq, newSample.derivative);
@@ -79,5 +67,19 @@ static void ISR_frequencyAnalyzer() {
 
 void FrequencyAnalyzer_start() {
     alt_irq_register(FREQUENCY_ANALYSER_IRQ, NULL, ISR_frequencyAnalyzer);
+	xConfigSemaphore = xSemaphoreCreateBinary();
 	printf("finished FA init");
+}
+
+float FrequencyAnalyzer_getConfig(uint8_t configIndex) {
+	xSemaphoreTake(xConfigSemaphore, portMAX_DELAY);
+	float retConfig = config[configIndex];
+	xSemaphoreGive(xConfigSemaphore);
+	return retConfig;
+}
+
+void FrequencyAnalyzer_setConfig(uint8_t configIndex, float val) {
+	xSemaphoreTake(xConfigSemaphore, portMAX_DELAY);
+	config[configIndex] = val;
+	xSemaphoreGive(xConfigSemaphore);
 }

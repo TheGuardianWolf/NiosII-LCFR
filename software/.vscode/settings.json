@@ -3,6 +3,8 @@
         "*.html.txt": "html",
         "load_manager.h": "c",
         "freertos.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "system.h": "c",
+        "altera_up_avalon_video_pixel_buffer_dma.h": "c"
     }
 }
