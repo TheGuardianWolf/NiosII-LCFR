@@ -109,6 +109,7 @@ void PRVGADraw_Task(void *pvParameters ){
 		while (xQueueReceive(xVGAQueue, &receivedFrequencyInfo, 0) == pdTRUE) {
 			alt_up_char_buffer_string(char_buf, receivedFrequencyInfo.stable ? "Stable  " : "Unstable", 19, 46);
 			frequencyInfo[i] = receivedFrequencyInfo;
+			//printf("%f\n", receivedFrequencyInfo.derivative);
 			i =	++i%100; //point to the next data (oldest) to be overwritten
 		}
 		alt_up_char_buffer_string(char_buf, configValues[0], 32, 48);
@@ -167,7 +168,7 @@ void VGA_start(){
 	}
 	alt_up_char_buffer_clear(char_buf);
 
-//	memset(frequencyInfo, 0, sizeof(frequencyInfo));
+	memset(frequencyInfo, 0, sizeof(frequencyInfo));
 
 	xNewConfigValueSemaphore = xSemaphoreCreateMutex();
 

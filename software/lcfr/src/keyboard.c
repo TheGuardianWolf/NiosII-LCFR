@@ -59,7 +59,7 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
             // do nothing
           case KB_BINARY_MAKE_CODE :
         	  if(flag == true) {
-        		  if ((keyInput_keycode == 0xd) || (keyInput_keycode == 0x5a)) {
+        		  if ((keyInput_keycode == 0xd) || (keyInput_keycode == 0x5a) || (keyInput_keycode == 0x66)) {
         			xQueueSendFromISR(xKeyboardQueue, &keyInput_keycode, NULL);
         		  }
         	  }
@@ -95,12 +95,9 @@ void KB_Task(void *pvParameters ) {
 		.value = 0.0f
 	};
 	while(1) {
-		//printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
+		printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
 		if(xQueueReceive(xKeyboardQueue, &keyBufferTemp, portMAX_DELAY) == pdTRUE) {
 			if ((keyBufferTemp >= '0' && keyBufferTemp <= '9' ) || keyBufferTemp == '.') {
-				xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
-				keyBuffer[i] = keyBufferTemp;
-				xSemaphoreGive(xKeyBufferSemaphore);
 				KB_setKey(i, keyBufferTemp);
 				i++;
 			}
@@ -112,16 +109,22 @@ void KB_Task(void *pvParameters ) {
 				FrequencyAnalyzer_setConfig(config_info_temp.type, config_info_temp.value);
 				char emptyBuffer[KB_KEYBUFFER_SIZE] = "";
 				KB_setKeyBuffer(emptyBuffer);
-
 				i = 0;
+				VGA_nextConfigType();
 			}
+
+			else if (keyBufferTemp == 0x66){
+				KB_setKey(i - 1, (char)0);
+				i--;
+			}
+
 			else {
 				int j;
 				change_type();
-				for (j = 0; j < i + 1; j++) {
-					keyBuffer[j] = 0;
-				}
+				char emptyBuffer[KB_KEYBUFFER_SIZE] = "";
+				KB_setKeyBuffer(emptyBuffer);
 				i = 0;
+				VGA_nextConfigType();
 			}
 		}
 	}
@@ -160,7 +163,9 @@ void KB_start(){
 	xKeyboardQueue = xQueueCreate( 16, sizeof(char));
 
 	//Create draw task
-	xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 1, NULL );	
+	xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 10, NULL );
+	//create the binary semaphore for the keys variable
+	xKeyBufferSemaphore = xSemaphoreCreateMutex();
 
 	current_type = lower_freq;
 }
