@@ -18,7 +18,7 @@
 
 static FrequencySample currentSample;
 static bool stablity = true;
-static float config_values[3] = {45.0f, 55.0f, 10.0f};
+static float configValues[3] = {45.0f, 55.0f, 10.0f};
 static bool firstMeasurement = true;
 static SemaphoreHandle_t xConfigSemaphore;
 
@@ -34,7 +34,7 @@ static void ISR_frequencyAnalyzer() {
 
 	//check if it's the first measurement, if it is then ignore readings.
 	if (!firstMeasurement) {
-		newStablity = (newSample.instant > config_values[0] && newSample.instant < config_values[1] && newSample.derivative < config_values[2]);
+		newStablity = (newSample.instant > configValues[0] && newSample.instant < configValues[1] && newSample.derivative < configValues[2]);
 	}
 	else {
 		newStablity = true;
@@ -50,9 +50,9 @@ static void ISR_frequencyAnalyzer() {
 	firstMeasurement = false;
 
 	VGAFrequencyInfo vgaFreqInfo = {
-		.stable = newStablity;
-		.freq = newSample.instant;
-		.derivative = newSample.derivative;
+		.stable = newStablity,
+		.freq = newSample.instant,
+		.derivative = newSample.derivative
 	};
 
 	xQueueSendFromISR(VGA_getQueueHandle(), &vgaFreqInfo, NULL);
@@ -70,13 +70,13 @@ void FrequencyAnalyzer_start() {
 
 float FrequencyAnalyzer_getConfig(uint8_t configIndex) {
 	xSemaphoreTake(xConfigSemaphore, portMAX_DELAY);
-	float retConfig = config[configIndex];
+	float retConfig = configValues[configIndex];
 	xSemaphoreGive(xConfigSemaphore);
 	return retConfig;
 }
 
 void FrequencyAnalyzer_setConfig(uint8_t configIndex, float val) {
 	xSemaphoreTake(xConfigSemaphore, portMAX_DELAY);
-	config[configIndex] = val;
+	configValues[configIndex] = val;
 	xSemaphoreGive(xConfigSemaphore);
 }
