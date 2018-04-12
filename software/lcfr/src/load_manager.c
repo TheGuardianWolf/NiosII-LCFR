@@ -152,10 +152,16 @@ static void Task_loadManager(void *pvParameters) {
 				else {
 					i = event - EVENT_SWITCH_ON(0);
 					if (i < LOAD_MANAGER_LOADS) {
-						if (!managementMode && state[i] == DISABLED) {
-							state[i] = ENABLED;
-							managedLoadsCount++;
-							enabledLoadsCount++;
+						if (state[i] == DISABLED) {
+							if (managementMode) {
+								state[i] = SHED;
+								managedLoadsCount++;
+							}
+							else {
+								state[i] = ENABLED;
+								managedLoadsCount++;
+								enabledLoadsCount++;
+							}
 						}
 					}
 				}
