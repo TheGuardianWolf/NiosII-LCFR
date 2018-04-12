@@ -81,12 +81,12 @@ void PRVGADraw_Task(void *pvParameters ){
 	alt_up_char_buffer_string(char_buf, "-60", 9, 36);
 
 	alt_up_char_buffer_string(char_buf, "System Status: ", 4, 46);
-	alt_up_char_buffer_string(char_buf, "Lower Frequency Threshold: ", 4, 48);
-	alt_up_char_buffer_string(char_buf, "Upper Frequency Threshold: ", 4, 50);
-	alt_up_char_buffer_string(char_buf, "Change in Frequency Threshold: ", 4, 52);
-	alt_up_char_buffer_string(char_buf, "Enter New Lower Frequency Threshold: ", 38, 48);
-	alt_up_char_buffer_string(char_buf, "Enter New Upper Frequency Threshold: ", 38, 50);
-	alt_up_char_buffer_string(char_buf, "Enter Change in Frequency Threshold: ", 40, 52);
+	alt_up_char_buffer_string(char_buf, "Lower Freq Threshold: ", 4, 48);
+	alt_up_char_buffer_string(char_buf, "Upper Freq Threshold: ", 4, 50);
+	alt_up_char_buffer_string(char_buf, "Change in Freq Threshold: ", 4, 52);
+	alt_up_char_buffer_string(char_buf, "Enter New Lower Freq Threshold: ", 38, 48);
+	alt_up_char_buffer_string(char_buf, "Enter New Upper Freq Threshold: ", 38, 50);
+	alt_up_char_buffer_string(char_buf, "Enter Change in Freq Threshold: ", 38, 52);
 
 	int i = 99, j = 0;
 	Line line_freq, line_roc;
@@ -102,22 +102,23 @@ void PRVGADraw_Task(void *pvParameters ){
 
 		int k;
 		for (k = 0; k < VGA_CONFIG_TYPES_COUNT; k++) {
-			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%f", FrequencyAnalyzer_getConfig(k));
+			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%.2f", FrequencyAnalyzer_getConfig(k));
+//			configValues[k][4] = '\0';
 		}
 
 		//receive frequency data from queue
 		while (xQueueReceive(xVGAQueue, &receivedFrequencyInfo, 0) == pdTRUE) {
 			alt_up_char_buffer_string(char_buf, receivedFrequencyInfo.stable ? "Stable  " : "Unstable", 19, 46);
 			frequencyInfo[i] = receivedFrequencyInfo;
-			//printf("%f\n", receivedFrequencyInfo.derivative);
+			printf("%f\n", receivedFrequencyInfo.derivative);
 			i =	++i%100; //point to the next data (oldest) to be overwritten
 		}
-		alt_up_char_buffer_string(char_buf, configValues[0], 32, 48);
-		alt_up_char_buffer_string(char_buf, configValues[1], 35, 50);
-		alt_up_char_buffer_string(char_buf, configValues[2], 35, 52);
-		alt_up_char_buffer_string(char_buf, configType == 0 ? newConfigValue : "", 77, 48);
-		alt_up_char_buffer_string(char_buf, configType == 1 ? newConfigValue : "", 77, 50);
-		alt_up_char_buffer_string(char_buf, configType == 2 ? newConfigValue : "", 77, 52);
+		alt_up_char_buffer_string(char_buf, configValues[0], 26, 48);
+		alt_up_char_buffer_string(char_buf, configValues[1], 26, 50);
+		alt_up_char_buffer_string(char_buf, configValues[2], 30, 52);
+		alt_up_char_buffer_string(char_buf, configType == 0 ? newConfigValue : "", 71, 48);
+		alt_up_char_buffer_string(char_buf, configType == 1 ? newConfigValue : "", 71, 50);
+		alt_up_char_buffer_string(char_buf, configType == 2 ? newConfigValue : "", 71, 52);
 
 		//clear old graph to draw new graph
 		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 0, 639, 199, 0, 0);
@@ -173,7 +174,7 @@ void VGA_start(){
 	xNewConfigValueSemaphore = xSemaphoreCreateMutex();
 
 	//Create queue for display
-	xVGAQueue = xQueueCreate( 100, sizeof(VGAFrequencyInfo));
+	xVGAQueue = xQueueCreate( 10, sizeof(VGAFrequencyInfo));
 
 	//Create draw task
 	xTaskCreate( PRVGADraw_Task, "DrawTsk", configMINIMAL_STACK_SIZE, NULL, 2, &PRVGADraw );

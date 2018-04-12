@@ -15,11 +15,11 @@
 static void init() {
 	VGA_start();
 	KB_start();
-//	Switch_start();
-//	Button_start();
-//	LED_start();
+	Switch_start();
+	Button_start();
+	LED_start();
 	FrequencyAnalyzer_start();
-//	LoadManager_start();
+	LoadManager_start();
 }
 
 /*

@@ -78,11 +78,11 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
 }
 
 static void change_type() {
-	if (current_type == lower_freq) {
-		current_type = change_in_freq;
+	if (current_type >= 2) {
+		current_type = 0;
 	}
 	else {
-		current_type = lower_freq;
+		current_type++;
 	}
 }
 
@@ -110,20 +110,20 @@ void KB_Task(void *pvParameters ) {
 				char emptyBuffer[KB_KEYBUFFER_SIZE] = "";
 				KB_setKeyBuffer(emptyBuffer);
 				i = 0;
+				change_type();
 				VGA_nextConfigType();
 			}
 
 			else if (keyBufferTemp == 0x66){
-				KB_setKey(i - 1, (char)0);
+				KB_setKey(i - 1, '\0');
 				i--;
 			}
 
 			else {
-				int j;
-				change_type();
 				char emptyBuffer[KB_KEYBUFFER_SIZE] = "";
 				KB_setKeyBuffer(emptyBuffer);
 				i = 0;
+				change_type();
 				VGA_nextConfigType();
 			}
 		}
