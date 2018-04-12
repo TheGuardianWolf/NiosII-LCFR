@@ -14,10 +14,7 @@
 
 #include "frequency_analyzer.h"
 #include "load_manager.h"
-#include "display.h"
-#include "config.h"
 #include "VGA.h"
-#include "keyboard.h"
 
 static FrequencySample currentSample;
 static bool stablity = true;
