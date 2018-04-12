@@ -17,54 +17,64 @@
 #include "VGA.h"
 
 static FrequencySample currentSample;
+static uint32_t newAdcSamples;
 static bool stablity = true;
 static float configValues[3] = {45.0f, 55.0f, 10.0f};
 static bool firstMeasurement = true;
 static SemaphoreHandle_t xConfigSemaphore;
+static QueueHandle_t xFrequencyAnalyzerQueue;
 
 static void ISR_frequencyAnalyzer() {
-	//printf("enter freq ");
-    FrequencySample newSample;
-    bool newStablity;
+    uint32_t adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0);
+	xQueueSendFromISR(xFrequencyAnalyzerQueue, &adcSamples, NULL);
+}
 
-    newSample.adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0);
-    newSample.instant = FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / newSample.adcSamples;
+static void Task_frequencyAnalyzer(void *pvParameters) {
+	if (xQueueReceive(xFrequencyAnalyzerQueue, &newAdcSamples, portMAX_DELAY) == pdTRUE) {
+		//printf("enter freq ");
+		FrequencySample newSample;
+		bool newStablity;
 
-	newSample.derivative = newSample.instant - currentSample.instant *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
+		newSample.adcSamples = newAdcSamples;
+		newSample.instant = FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / newSample.adcSamples;
 
-	//check if it's the first measurement, if it is then ignore readings.
-	if (!firstMeasurement) {
-		newStablity = (newSample.instant > configValues[0] && newSample.instant < configValues[1] && fabsf(newSample.derivative) < configValues[2]);
-	}
-	else {
-		newStablity = true;
-	}
+		newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
 
-	if (newStablity != stablity) {
-		uint8_t event = newStablity ? EVENT_FREQUENCY_ANALYZER_STABLE : EVENT_FREQUENCY_ANALYZER_UNSTABLE;
-		//xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
-	}
+		//check if it's the first measurement, if it is then ignore readings.
+		if (!firstMeasurement) {
+			newStablity = (newSample.instant > configValues[0] && newSample.instant < configValues[1] && newSample.derivative < configValues[2]);
+		}
+		else {
+			newStablity = true;
+		}
 
-	stablity = newStablity;
-	currentSample = newSample;
-	firstMeasurement = false;
+		if (newStablity != stablity) {
+			uint8_t event = newStablity ? EVENT_FREQUENCY_ANALYZER_STABLE : EVENT_FREQUENCY_ANALYZER_UNSTABLE;
+			// xQueueSend(LoadManager_getQueueHandle(), &event, portMAX_DELAY);
+		}
 
-	VGAFrequencyInfo vgaFreqInfo = {
-		.stable = newStablity,
-		.freq = newSample.instant,
-		.derivative = newSample.derivative
-	};
+		stablity = newStablity;
+		currentSample = newSample;
+		firstMeasurement = false;
 
-	//xQueueSendFromISR(VGA_getQueueHandle(), &vgaFreqInfo, NULL);
+		VGAFrequencyInfo vgaFreqInfo = {
+			.stable = newStablity,
+			.freq = newSample.instant,
+			.derivative = newSample.derivative
+		};
+
+		xQueueSend(VGA_getQueueHandle(), &vgaFreqInfo, portMAX_DELAY);
 #if DEBUG == 1
 		printf("ISR Frequency Analyzer Executed\n");
-		printf("samples: %u, instant: %f, derivative: %f\n", newSample.adcSamples, vgaFreqInfo.freq, vgaFreqInfo.derivative);
+		printf("samples: %u, instant: %f, derivative: %f\n", newSample.adcSamples, display.freq, newSample.derivative);
 #endif
 }
 
 void FrequencyAnalyzer_start() {
     alt_irq_register(FREQUENCY_ANALYSER_IRQ, NULL, ISR_frequencyAnalyzer);
+	xFrequencyAnalyzerQueue = xQueueCreate(2, sizeof(newAdcSamples));
 	xConfigSemaphore = xSemaphoreCreateMutex();
+	xTaskCreate(Task_frequencyAnalyzer, "frequencyAnalyzer",  configMINIMAL_STACK_SIZE, NULL, 6, NULL)
 	printf("finished FA init");
 }
 
