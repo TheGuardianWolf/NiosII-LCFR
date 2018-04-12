@@ -52,8 +52,8 @@ static void ps2_isr(void* ps2_device, alt_u32 id){
             	if ((keyInput_decoded >= '0' && keyInput_decoded <= '9') || (keyInput_keycode == 0xd) || (keyInput_keycode == 0x5a)) {
             		xQueueSendFromISR(xKeyboardQueue, &keyInput_decoded, NULL);
             	}
-            	break ;
             }
+            break ;
           case KB_LONG_BINARY_MAKE_CODE :
         	  break;
             // do nothing
@@ -157,14 +157,13 @@ void KB_start(){
 	// register the PS/2 interrupt
 	IOWR_8DIRECT(PS2_BASE,4,1);
 
-	//Create draw task
-	xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 1, NULL );
+	xKeyBufferSemaphore = xSemaphoreCreateBinary();
 
 	//Create queue for display
 	xKeyboardQueue = xQueueCreate( 16, sizeof(char));
 
-	//create the binary semaphore for the keys variable
-	xKeyBufferSemaphore = xSemaphoreCreateMutex();
+	//Create draw task
+	xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 1, NULL );	
 
 	current_type = lower_freq;
 }

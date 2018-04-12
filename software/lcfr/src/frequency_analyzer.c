@@ -30,11 +30,11 @@ static void ISR_frequencyAnalyzer() {
     newSample.adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0);
     newSample.instant = FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / newSample.adcSamples;
 
-	newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
+	newSample.derivative = newSample.instant - currentSample.instant *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
 
 	//check if it's the first measurement, if it is then ignore readings.
 	if (!firstMeasurement) {
-		newStablity = (newSample.instant > configValues[0] && newSample.instant < configValues[1] && newSample.derivative < configValues[2]);
+		newStablity = (newSample.instant > configValues[0] && newSample.instant < configValues[1] && fabsf(newSample.derivative) < configValues[2]);
 	}
 	else {
 		newStablity = true;

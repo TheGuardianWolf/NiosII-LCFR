@@ -1,21 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 #include "sys/alt_irq.h"
 #include "system.h"
 #include "io.h"
 #include "altera_up_avalon_video_character_buffer_with_dma.h"
 #include "altera_up_avalon_video_pixel_buffer_dma.h"
-#include "display.h"
 
 
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
-#include "FreeRTOS/semphr.h"
-#include "FreeRTOS/queue.h"
+#include "freertos/semphr.h"
 
 #include "VGA.h"
 #include "keyboard.h"
-#include "config.h"
+#include "frequency_analyzer.h"
 
 //For frequency plot
 #define FREQPLT_ORI_X 101		//x axis pixel position at the plot origin
@@ -42,10 +42,17 @@ typedef struct{
 	unsigned int y2;
 }Line;
 
+static SemaphoreHandle_t xNewConfigValueSemaphore;
 static alt_up_pixel_buffer_dma_dev *pixel_buf;
 static alt_up_char_buffer_dev *char_buf;
 static const TickType_t xFrequency = VGA_PERIOD * portTICK_PERIOD_MS;
-static enum config_type current_type = lower_freq;
+static size_t configType = 0;
+static char configValues[VGA_CONFIG_TYPES_COUNT][KB_KEYBUFFER_SIZE] = {
+	"45.0", "55.0", "10.0"
+};
+static char newConfigValue[KB_KEYBUFFER_SIZE] = "";
+static VGAFrequencyInfo frequencyInfo[100];
+static VGAFrequencyInfo receivedFrequencyInfo;
 
 /****** VGA display ******/
 
@@ -75,115 +82,62 @@ void PRVGADraw_Task(void *pvParameters ){
 
 	alt_up_char_buffer_string(char_buf, "System Status: ", 4, 46);
 	alt_up_char_buffer_string(char_buf, "Lower Frequency Threshold: ", 4, 48);
-	alt_up_char_buffer_string(char_buf, "Change in Frequency Threshold: ", 4, 50);
+	alt_up_char_buffer_string(char_buf, "Upper Frequency Threshold: ", 4, 50);
+	alt_up_char_buffer_string(char_buf, "Change in Frequency Threshold: ", 4, 52);
 	alt_up_char_buffer_string(char_buf, "Enter New Lower Frequency Threshold: ", 38, 48);
-	alt_up_char_buffer_string(char_buf, "Enter Change in Frequency Threshold: ", 40, 50);
+	alt_up_char_buffer_string(char_buf, "Enter New Upper Frequency Threshold: ", 38, 50);
+	alt_up_char_buffer_string(char_buf, "Enter Change in Frequency Threshold: ", 40, 52);
 
-	float freq[100], dfreq[100];
-	//struct display_info display_array[100];
 	int i = 99, j = 0;
 	Line line_freq, line_roc;
-	char key;
-	char* current_key_array_lower = "45";
-	char* current_key_array_change = "10";
-	char key_array_lower[16];
-	char key_array_change[16];
-	unsigned int lower_i = 0;
-	unsigned int change_i = 0;
 
-	struct display_info display;
 	TickType_t xLastWakeTime;
 
 	while(1){
 		xLastWakeTime = xTaskGetTickCount();
 
-		//key = KB_getKeyBuffer();
+		xSemaphoreTake(xNewConfigValueSemaphore, portMAX_DELAY);
+		KB_getKeyBuffer(newConfigValue);
+		xSemaphoreGive(xNewConfigValueSemaphore);
+
+		int k;
+		for (k = 0; k < VGA_CONFIG_TYPES_COUNT; k++) {
+			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%f", FrequencyAnalyzer_getConfig(k));
+		}
 
 		//receive frequency data from queue
-		if (xQueueReceive(xVGAQueue, &display, portMAX_DELAY) == pdTRUE) {
-
-			if (display.stable == true) {
-				alt_up_char_buffer_string(char_buf, "Stable  ", 19, 46);
-			}
-			else {
-				alt_up_char_buffer_string(char_buf, "Unstable", 19, 46);
-			}
-
-			freq[i] = display.freq;
-
-			//calculate frequency RoC
-
-			if(i==0){
-				dfreq[0] = (freq[0]-freq[99]) * 2.0 * freq[0] * freq[99] / (freq[0]+freq[99]);
-			}
-			else{
-				dfreq[i] = (freq[i]-freq[i-1]) * 2.0 * freq[i]* freq[i-1] / (freq[i]+freq[i-1]);
-			}
-
-			if (dfreq[i] > 100.0){
-				dfreq[i] = 100.0;
-			}
-
-
+		while (xQueueReceive(xVGAQueue, &receivedFrequencyInfo, portMAX_DELAY) == pdTRUE) {
+			alt_up_char_buffer_string(char_buf, receivedFrequencyInfo.stable ? "Stable  " : "Unstable", 19, 46);
+			frequencyInfo[i] = receivedFrequencyInfo;
 			i =	++i%100; //point to the next data (oldest) to be overwritten
-
 		}
-
-		if(key >= '0' && key <= '9') {
-			if(current_type == lower_freq) {
-				key_array_lower[lower_i] = key;
-				lower_i++;
-			}
-			else {
-				key_array_change[change_i] = key;
-				change_i++;
-			}
-		}
-		else if(key == 10) {
-			int j;
-			current_key_array_lower = &key_array_lower;
-			if (current_type == lower_freq) {
-				for (j = 0; j < 16; j++) {
-					key_array_lower[j] = '\0';
-				}
-				lower_i = 0;
-			}
-			else {
-				for (j = 0; j < 16; j++) {
-					key_array_change[j] = '\0';
-				}
-				change_i = 0;
-			}
-		}
-		else {
-			change_VGA_type();
-		}
-
-		alt_up_char_buffer_string(char_buf, current_key_array_lower, 32, 48);
-		alt_up_char_buffer_string(char_buf, current_key_array_change, 35, 50);
-		alt_up_char_buffer_string(char_buf, &key_array_lower, 77, 48);
-		alt_up_char_buffer_string(char_buf, &key_array_change, 77, 50);
+		alt_up_char_buffer_string(char_buf, configValues[0], 32, 48);
+		alt_up_char_buffer_string(char_buf, configValues[1], 35, 50);
+		alt_up_char_buffer_string(char_buf, configValues[2], 35, 50);
+		alt_up_char_buffer_string(char_buf, configType == 0 ? newConfigValue : "", 77, 48);
+		alt_up_char_buffer_string(char_buf, configType == 1 ? newConfigValue : "", 77, 50);
+		alt_up_char_buffer_string(char_buf, configType == 2 ? newConfigValue : "", 77, 52);
 
 		//clear old graph to draw new graph
 		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 0, 639, 199, 0, 0);
 		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 201, 639, 299, 0, 0);
 
 		for(j=0;j<99;++j){ //i here points to the oldest data, j loops through all the data to be drawn on VGA
-			if (((int)(freq[(i+j)%100]) > MIN_FREQ) && ((int)(freq[(i+j+1)%100]) > MIN_FREQ)){
+			if (((int)(frequencyInfo[(i+j)%100].freq) > MIN_FREQ) && ((int)(frequencyInfo[(i+j+1)%100].freq) > MIN_FREQ)){
 				//Calculate coordinates of the two data points to draw a line in between
 				//Frequency plot
 				line_freq.x1 = FREQPLT_ORI_X + FREQPLT_GRID_SIZE_X * j;
-				line_freq.y1 = (int)(FREQPLT_ORI_Y - FREQPLT_FREQ_RES * (freq[(i+j)%100] - MIN_FREQ));
+				line_freq.y1 = (int)(FREQPLT_ORI_Y - FREQPLT_FREQ_RES * (frequencyInfo[(i+j)%100].freq - MIN_FREQ));
 
 				line_freq.x2 = FREQPLT_ORI_X + FREQPLT_GRID_SIZE_X * (j + 1);
-				line_freq.y2 = (int)(FREQPLT_ORI_Y - FREQPLT_FREQ_RES * (freq[(i+j+1)%100] - MIN_FREQ));
+				line_freq.y2 = (int)(FREQPLT_ORI_Y - FREQPLT_FREQ_RES * (frequencyInfo[(i+j+1)%100].freq - MIN_FREQ));
 
 				//Frequency RoC plot
 				line_roc.x1 = ROCPLT_ORI_X + ROCPLT_GRID_SIZE_X * j;
-				line_roc.y1 = (int)(ROCPLT_ORI_Y - ROCPLT_ROC_RES * dfreq[(i+j)%100]);
+				line_roc.y1 = (int)(ROCPLT_ORI_Y - ROCPLT_ROC_RES * frequencyInfo[(i+j)%100].derivative);
 
 				line_roc.x2 = ROCPLT_ORI_X + ROCPLT_GRID_SIZE_X * (j + 1);
-				line_roc.y2 = (int)(ROCPLT_ORI_Y - ROCPLT_ROC_RES * dfreq[(i+j+1)%100]);
+				line_roc.y2 = (int)(ROCPLT_ORI_Y - ROCPLT_ROC_RES * frequencyInfo[(i+j+1)%100].derivative);
 
 				//Draw
 				alt_up_pixel_buffer_dma_draw_line(pixel_buf, line_freq.x1, line_freq.y1, line_freq.x2, line_freq.y2, 0x3ff << 0, 0);
@@ -192,21 +146,11 @@ void PRVGADraw_Task(void *pvParameters ){
 		}
 		//delay for 16.6 which is close enough to 17 for 60Hz screen
 		vTaskDelayUntil(&xLastWakeTime, xFrequency);
-
 	}
 }
 
 QueueHandle_t VGA_getQueueHandle() {
 	return xVGAQueue;
-}
-
-void change_VGA_type() {
-	if (current_type == lower_freq) {
-		current_type = change_in_freq;
-	}
-	else {
-		current_type = lower_freq;
-	}
 }
 
 void VGA_start(){
@@ -223,6 +167,10 @@ void VGA_start(){
 	}
 	alt_up_char_buffer_clear(char_buf);
 
+	memset(frequencyInfo, 0, sizeof(frequencyInfo));
+
+	xNewConfigValueSemaphore = xSemaphoreCreateBinary();
+
 	//Create queue for display
 	xVGAQueue = xQueueCreate( 100, sizeof(VGAFrequencyInfo));
 
@@ -230,4 +178,20 @@ void VGA_start(){
 	xTaskCreate( PRVGADraw_Task, "DrawTsk", configMINIMAL_STACK_SIZE, NULL, 2, &PRVGADraw );
 
 	printf("finished VGA init");
+}
+
+void VGA_nextConfigType(bool setValue) {
+	xSemaphoreTake(xNewConfigValueSemaphore, portMAX_DELAY);
+	if (setValue) {
+		memcpy(configValues[configType], newConfigValue,KB_KEYBUFFER_SIZE);
+	}
+	newConfigValue[0] = '\0';
+	xSemaphoreGive(xNewConfigValueSemaphore);
+	
+	if (configType >= 2) {
+		configType = 0;
+	}
+	else {
+		configType++;
+	}
 }

@@ -11,6 +11,7 @@
 #include "FreeRTOS/queue.h"
 
 #define VGA_PERIOD 17
+#define VGA_CONFIG_TYPES_COUNT 3
 
 typedef struct {
 	bool stable;
@@ -21,5 +22,7 @@ typedef struct {
 void VGA_start();
 
 QueueHandle_t VGA_getQueueHandle();
+
+void VGA_nextConfigType(bool setValue);
 
 #endif /* VGA_H_ */
