@@ -14,7 +14,7 @@ static void ISR_button() {
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7);
 
 	uint8_t event = EVENT_BUTTON_PRESSED;
-	xQueueSendFromISR(LoadManager_getQueueHandle, &event, NULL);
+	xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
 #if DEBUG == 0
 	printf("Button\n");
 #endif
