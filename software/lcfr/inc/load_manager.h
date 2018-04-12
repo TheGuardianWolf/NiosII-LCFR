@@ -24,6 +24,13 @@ typedef enum {
 	SHED
 } ManagedState;
 
+typedef struct {
+	uint32_t min;
+	uint32_t max;
+	uint32_t average;
+	uint32_t averageSamples;
+} ReactionTimes;
+
 void LoadManager_start();
 
 QueueHandle_t LoadManager_getQueueHandle();

@@ -12,6 +12,7 @@
 #include "freertos/semphr.h"
 #include "system.h"
 
+#include "stopwatch.h"
 #include "frequency_analyzer.h"
 #include "load_manager.h"
 #include "VGA.h"
@@ -25,6 +26,7 @@ static SemaphoreHandle_t xConfigSemaphore;
 static QueueHandle_t xFrequencyAnalyzerQueue;
 
 static void ISR_frequencyAnalyzer() {
+	(!Stopwatch_isStarted()) ? Stopwatch_start(true) : void;
     uint32_t adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0);
 	xQueueSendFromISR(xFrequencyAnalyzerQueue, &adcSamples, NULL);
 }
@@ -49,8 +51,20 @@ static void Task_frequencyAnalyzer(void *pvParameters) {
 			}
 
 			if (newStablity != stablity) {
-				uint8_t event = newStablity ? EVENT_FREQUENCY_ANALYZER_STABLE : EVENT_FREQUENCY_ANALYZER_UNSTABLE;
+				uint8_t event;
+				if (newStablity) {
+					event = EVENT_FREQUENCY_ANALYZER_STABLE;
+					Stopwatch_stop();
+					Stopwatch_reset();
+				}
+				else {
+					event = EVENT_FREQUENCY_ANALYZER_UNSTABLE;
+				}
 				xQueueSend(LoadManager_getQueueHandle(), &event, portMAX_DELAY);
+			}
+			else {
+				Stopwatch_stop();
+				Stopwatch_reset();
 			}
 
 			stablity = newStablity;

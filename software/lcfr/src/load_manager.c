@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <altera_avalon_pio_regs.h>
+#include <limits.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -10,6 +11,7 @@
 #include "button.h"
 #include "frequency_analyzer.h"
 #include "system.h"
+#include "stopwatch.h"
 
 static const TickType_t xGraceTimerFrequency = LOAD_MANAGER_GRACE * portTICK_PERIOD_MS;
 static QueueHandle_t xLoadManagerQueue;
@@ -29,6 +31,25 @@ static ManagedState state[LOAD_MANAGER_LOADS] = {ENABLED, ENABLED, ENABLED, ENAB
 static int8_t enabledLoadsCount = LOAD_MANAGER_LOADS;
 
 static int8_t managedLoadsCount = LOAD_MANAGER_LOADS;
+
+static ReactionTimes reactionTimes = {
+	.min = UINT_MAX,
+	.max = 0,
+	.average = 0,
+	.averageSamples = 0
+}
+
+static void registerReactionTime(uint32_t t) {
+	if (t < reactionTimes.min) {
+		minReactionTime = t;
+	}
+
+	if (t > reactionTimes.max) {
+		maxReactionTime = t;
+	}
+
+	reactionTimes.average = (reactionTimes.average * reactionTimes.averageSamples + t) / (reactionTimes.averageSamples++)
+}
 
 static void graceTimerCallback(xTimerHandle t_timer) {
 	gracePeriod = false;
@@ -98,6 +119,10 @@ static void Task_loadManager(void *pvParameters) {
 				if (maintainanceMode) {
 					managementMode = false;
 					updateStateFromSwitch();
+					if (Stopwatch_isRunning()) {
+						Stopwatch_stop();
+						Stopwatch_reset();
+					}
 				}
 			}
 			else if (event == EVENT_FREQUENCY_ANALYZER_STABLE) {
@@ -141,6 +166,11 @@ static void Task_loadManager(void *pvParameters) {
 						}
 						else if (enabledLoadsCount == 1) {
 							shedLoad();
+						}
+						if (Stopwatch_isRunning()) {
+							Stopwatch_stop();
+							registerReactionTime(Stopwatch_getTimeElapsed());
+							Stopwatch_reset();
 						}
 					}
 				}
@@ -255,4 +285,8 @@ QueueHandle_t LoadManager_getQueueHandle() {
 
 ManagedState LoadManager_getState(uint8_t i) {
 	return state[i];
+}
+
+ReactionTime LoadManager_getReactionTimes() {
+	return reactionTimes;
 }
