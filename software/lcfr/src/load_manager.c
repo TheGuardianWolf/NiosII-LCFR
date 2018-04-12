@@ -63,7 +63,10 @@ static void registerReactionTime(uint32_t then) {
 
 static void graceTimerCallback(xTimerHandle t_timer) {
 	gracePeriod = false;
-	uint8_t event = EVENT_LOAD_MANAGER_GRACE_EXPIRED;
+	Event event = {
+		.code = EVENT_LOAD_MANAGER_GRACE_EXPIRED,
+		.timestamp = timestamp()
+	};
 	xQueueSend(xLoadManagerQueue, &event, 10);
 }
 
@@ -173,7 +176,7 @@ static void Task_loadManager(void *pvParameters) {
 						else if (enabledLoadsCount == 1) {
 							shedLoad();
 						}
-						//registerReactionTime(event.timestamp);
+						registerReactionTime(event.timestamp);
 					}
 				}
 			}
@@ -295,5 +298,5 @@ ReactionTimes LoadManager_getReactionTimes() {
 	xSemaphoreTake(xReactionTimesMutex, portMAX_DELAY);
 	ReactionTimes retVal = reactionTimes;
 	xSemaphoreGive(xReactionTimesMutex);
-    return reactionTimes; 
+    return retVal;
 } 
