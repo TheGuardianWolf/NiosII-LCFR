@@ -7,6 +7,7 @@
         "system.h": "c",
         "altera_up_avalon_video_pixel_buffer_dma.h": "c",
         "task.h": "c",
-        "queue.h": "c"
+        "queue.h": "c",
+        "timers.h": "c"
     }
 }

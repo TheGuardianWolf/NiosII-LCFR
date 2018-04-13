@@ -31,7 +31,7 @@ static int decode_status;
 static char keyInput_keycode = 0;
 static char keyInput_decoded;
 static char keyBuffer[KB_KEYBUFFER_SIZE];
-static SemaphoreHandle_t xKeyBufferSemaphore;
+static SemaphoreHandle_t xKeyBufferMutex;
 static QueueHandle_t xKeyboardQueue;
 TaskHandle_t xHandle;
 
@@ -131,21 +131,21 @@ void KB_Task(void *pvParameters ) {
 }
 
 void KB_getKeyBuffer(char* buf) {
-	xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
+	xSemaphoreTake(xKeyBufferMutex, portMAX_DELAY);
 	memcpy(buf, keyBuffer, sizeof(keyBuffer));
-	xSemaphoreGive(xKeyBufferSemaphore);
+	xSemaphoreGive(xKeyBufferMutex);
 }
 
 void KB_setKeyBuffer(char* buf) {
-	xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
+	xSemaphoreTake(xKeyBufferMutex, portMAX_DELAY);
 	memcpy(keyBuffer, buf, sizeof(keyBuffer));
-	xSemaphoreGive(xKeyBufferSemaphore);
+	xSemaphoreGive(xKeyBufferMutex);
 }
 
 void KB_setKey(size_t keyIndex, char k) {
-	xSemaphoreTake(xKeyBufferSemaphore, portMAX_DELAY);
+	xSemaphoreTake(xKeyBufferMutex, portMAX_DELAY);
 	keyBuffer[keyIndex] = k;
-	xSemaphoreGive(xKeyBufferSemaphore);
+	xSemaphoreGive(xKeyBufferMutex);
 }
 
 void KB_start(){
@@ -157,7 +157,7 @@ void KB_start(){
 	// register the PS/2 interrupt
 	IOWR_8DIRECT(PS2_BASE,4,1);
 
-	xKeyBufferSemaphore = xSemaphoreCreateBinary();
+	xKeyBufferMutex = xSemaphoreCreateBinary();
 
 	//Create queue for display
 	xKeyboardQueue = xQueueCreate( 16, sizeof(char));
@@ -165,7 +165,7 @@ void KB_start(){
 	//Create draw task
 	xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 10, NULL );
 	//create the binary semaphore for the keys variable
-	xKeyBufferSemaphore = xSemaphoreCreateMutex();
+	xKeyBufferMutex = xSemaphoreCreateMutex();
 
 	current_type = lower_freq;
 }

@@ -42,7 +42,7 @@ typedef struct{
 	unsigned int y2;
 }Line;
 
-static SemaphoreHandle_t xNewConfigValueSemaphore;
+static SemaphoreHandle_t xNewConfigValueMutex;
 static alt_up_pixel_buffer_dma_dev *pixel_buf;
 static alt_up_char_buffer_dev *char_buf;
 static const TickType_t xFrequency = VGA_PERIOD * portTICK_PERIOD_MS;
@@ -99,17 +99,17 @@ void PRVGADraw_Task(void *pvParameters ){
 	while(1){
 		xLastWakeTime = xTaskGetTickCount();
 
-		xSemaphoreTake(xNewConfigValueSemaphore, portMAX_DELAY);
+		xSemaphoreTake(xNewConfigValueMutex, portMAX_DELAY);
 		KB_getKeyBuffer(newConfigValue);
 		size_t newConfigValueLength = strlen(newConfigValue);
 		for (k = newConfigValueLength; k < 5; k++) {
 			newConfigValue[k] = ' ';
 		}
 		if (newConfigValueLength < 5) {
-			newConfigValue[newConfigValueLength] = '_';
+			newConfigValue[newConfigValueLength] = (xLastWakeTime % 500 < 250) ? '_' : ' ';
 		}
 		newConfigValue[5] = '\0';
-		xSemaphoreGive(xNewConfigValueSemaphore);
+		xSemaphoreGive(xNewConfigValueMutex);
 
 
 		for (k = 0; k < VGA_CONFIG_TYPES_COUNT; k++) {
@@ -182,7 +182,7 @@ void VGA_start(){
 
 	memset(frequencyInfo, 0, sizeof(frequencyInfo));
 
-	xNewConfigValueSemaphore = xSemaphoreCreateMutex();
+	xNewConfigValueMutex = xSemaphoreCreateMutex();
 
 	//Create queue for display
 	xVGAQueue = xQueueCreate( 10, sizeof(VGAFrequencyInfo));
@@ -194,12 +194,12 @@ void VGA_start(){
 }
 
 void VGA_nextConfigType(bool setValue) {
-	xSemaphoreTake(xNewConfigValueSemaphore, portMAX_DELAY);
+	xSemaphoreTake(xNewConfigValueMutex, portMAX_DELAY);
 	if (setValue) {
 		memcpy(configValues[configType], newConfigValue,KB_KEYBUFFER_SIZE);
 	}
 	newConfigValue[0] = '\0';
-	xSemaphoreGive(xNewConfigValueSemaphore);
+	xSemaphoreGive(xNewConfigValueMutex);
 	
 	if (configType >= 2) {
 		configType = 0;

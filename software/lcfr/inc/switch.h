@@ -14,9 +14,6 @@
 #define SWITCH_COUNT 5
 #define SWITCH_PERIOD 50  // ms
 
-#define EVENT_SWITCH_ON(x) 247 + x
-#define EVENT_SWITCH_OFF(x) 242 + x
-
 void Switch_start();
 
 bool Switch_getState(uint8_t i);

@@ -14,8 +14,6 @@
 
 #define BUTTON_COUNT 1
 
-#define EVENT_BUTTON_PRESSED 252
-
 // typedef void (*ButtonEventHandler)(void);
 
 void Button_start();

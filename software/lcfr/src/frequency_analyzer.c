@@ -12,10 +12,10 @@
 #include "freertos/semphr.h"
 #include "system.h"
 
-#include "stopwatch.h"
 #include "frequency_analyzer.h"
 #include "load_manager.h"
 #include "VGA.h"
+#include "event.h"
 
 static FrequencySample currentSample;
 static uint32_t newAdcSamples;
@@ -26,9 +26,11 @@ static SemaphoreHandle_t xConfigSemaphore;
 static QueueHandle_t xFrequencyAnalyzerQueue;
 
 static void ISR_frequencyAnalyzer() {
-	(!Stopwatch_isStarted()) ? Stopwatch_start(true) : void;
-    uint32_t adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0);
-	xQueueSendFromISR(xFrequencyAnalyzerQueue, &adcSamples, NULL);
+    ADCSample adcSample {
+		.adcSamples = IORD(FREQUENCY_ANALYSER_BASE, 0),
+		.timestamp = timestampFromISR()
+	};
+	xQueueSendFromISR(xFrequencyAnalyzerQueue, &adcSample, NULL);
 }
 
 static void Task_frequencyAnalyzer(void *pvParameters) {
@@ -37,10 +39,10 @@ static void Task_frequencyAnalyzer(void *pvParameters) {
 			FrequencySample newSample;
 			bool newStablity;
 
-			newSample.adcSamples = newAdcSamples;
+			newSample.adcSamples = newAdcSamples.adcSamples;
 			newSample.instant = FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / newSample.adcSamples;
 
-					//check if it's the first measurement, if it is then ignore readings.
+			//check if it's the first measurement, if it is then ignore readings.
 			if (!firstMeasurement) {
 				newStablity = (newSample.instant > configValues[0] && newSample.instant < configValues[1] && newSample.derivative < configValues[2]);
 				newSample.derivative = fabs(newSample.instant - currentSample.instant) *  FREQUENCY_ANALYZER_SAMPLING_FREQUENCY / ((float)(currentSample.adcSamples + newSample.adcSamples) / 2);
@@ -51,20 +53,16 @@ static void Task_frequencyAnalyzer(void *pvParameters) {
 			}
 
 			if (newStablity != stablity) {
-				uint8_t event;
+				Event event;
 				if (newStablity) {
-					event = EVENT_FREQUENCY_ANALYZER_STABLE;
-					Stopwatch_stop();
-					Stopwatch_reset();
+					event.code = EVENT_FREQUENCY_ANALYZER_STABLE;
+					event.timestamp = newSample.timestamp;
 				}
 				else {
-					event = EVENT_FREQUENCY_ANALYZER_UNSTABLE;
+					event.code = EVENT_FREQUENCY_ANALYZER_UNSTABLE;
+					event.timestamp = newSample.timestamp;
 				}
 				xQueueSend(LoadManager_getQueueHandle(), &event, portMAX_DELAY);
-			}
-			else {
-				Stopwatch_stop();
-				Stopwatch_reset();
 			}
 
 			stablity = newStablity;
@@ -88,7 +86,7 @@ static void Task_frequencyAnalyzer(void *pvParameters) {
 
 void FrequencyAnalyzer_start() {
     alt_irq_register(FREQUENCY_ANALYSER_IRQ, NULL, ISR_frequencyAnalyzer);
-	xFrequencyAnalyzerQueue = xQueueCreate(2, sizeof(uint32_t));
+	xFrequencyAnalyzerQueue = xQueueCreate(8, sizeof(ADCSample));
 	xConfigSemaphore = xSemaphoreCreateMutex();
 	xTaskCreate(Task_frequencyAnalyzer, "frequencyAnalyzer",  configMINIMAL_STACK_SIZE, NULL, 6, NULL);
 }

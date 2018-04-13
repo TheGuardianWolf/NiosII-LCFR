@@ -11,7 +11,7 @@
 #include "button.h"
 #include "frequency_analyzer.h"
 #include "system.h"
-#include "stopwatch.h"
+#include "event.h"
 
 static const TickType_t xGraceTimerFrequency = LOAD_MANAGER_GRACE * portTICK_PERIOD_MS;
 static QueueHandle_t xLoadManagerQueue;
@@ -32,24 +32,28 @@ static int8_t enabledLoadsCount = LOAD_MANAGER_LOADS;
 
 static int8_t managedLoadsCount = LOAD_MANAGER_LOADS;
 
-static ReactionTimes reactionTimes = {
-	.min = UINT_MAX,
-	.max = 0,
-	.average = 0,
-	.averageSamples = 0
-}
+static Event event;
 
-static void registerReactionTime(uint32_t t) {
-	if (t < reactionTimes.min) {
-		minReactionTime = t;
-	}
+static ReactionTimes reactionTimes = { 
+    .min = UINT_MAX, 
+    .max = 0, 
+    .average = 0, 
+    .averageSamples = 0 
+} 
 
-	if (t > reactionTimes.max) {
-		maxReactionTime = t;
-	}
+static void registerReactionTime(uint32_t then) {
+	uint32_t t = then - timestamp();
 
-	reactionTimes.average = (reactionTimes.average * reactionTimes.averageSamples + t) / (reactionTimes.averageSamples++)
-}
+    if (t < reactionTimes.min) { 
+        reactionTimes.min = t; 
+    } 
+ 
+    if (t > reactionTimes.max) { 
+        reactionTimes.min = t; 
+    } 
+ 
+    reactionTimes.average = (reactionTimes.average * reactionTimes.averageSamples + t) / (reactionTimes.averageSamples++) 
+} 
 
 static void graceTimerCallback(xTimerHandle t_timer) {
 	gracePeriod = false;
@@ -108,24 +112,18 @@ static void updateStateFromSwitch() {
 }
 
 static void Task_loadManager(void *pvParameters) {
-	uint8_t event;
 	uint8_t i;
 	
 	while (1) {
 		if (xQueueReceive(xLoadManagerQueue, &event, portMAX_DELAY) == pdTRUE) {
-			if (event == EVENT_BUTTON_PRESSED) {
-				printf("Mchange\n");
+			if (event.code == EVENT_BUTTON_PRESSED) {
 				maintainanceMode = !maintainanceMode;
 				if (maintainanceMode) {
 					managementMode = false;
 					updateStateFromSwitch();
-					if (Stopwatch_isRunning()) {
-						Stopwatch_stop();
-						Stopwatch_reset();
-					}
 				}
 			}
-			else if (event == EVENT_FREQUENCY_ANALYZER_STABLE) {
+			else if (event.code == EVENT_FREQUENCY_ANALYZER_STABLE) {
 				sheddingLoads = false;
 				if (!maintainanceMode) {
 					if (gracePeriod) {
@@ -147,7 +145,7 @@ static void Task_loadManager(void *pvParameters) {
 					}
 				}
 			}
-			else if (event == EVENT_FREQUENCY_ANALYZER_UNSTABLE) {
+			else if (event.code == EVENT_FREQUENCY_ANALYZER_UNSTABLE) {
 				sheddingLoads = true;
 				managementMode = true;
 				if (!maintainanceMode) {
@@ -167,21 +165,17 @@ static void Task_loadManager(void *pvParameters) {
 						else if (enabledLoadsCount == 1) {
 							shedLoad();
 						}
-						if (Stopwatch_isRunning()) {
-							Stopwatch_stop();
-							registerReactionTime(Stopwatch_getTimeElapsed());
-							Stopwatch_reset();
-						}
+						registerReactionTime(event.timestamp);
 					}
 				}
 			}
-			else if (event >= EVENT_SWITCH_ON(0) && event <= EVENT_SWITCH_ON(4)) {
+			else if (event.code >= EVENT_SWITCH_ON(0) && event <= EVENT_SWITCH_ON(4)) {
 				if (maintainanceMode) {
 					updateStateFromSwitch();
 				}
 				else {
 //					printf("%d\n", managementMode);
-					i = event - EVENT_SWITCH_ON(0);
+					i = event.code - EVENT_SWITCH_ON(0);
 					if (i < LOAD_MANAGER_LOADS) {
 						if (state[i] == DISABLED) {
 							if (managementMode) {
@@ -197,12 +191,12 @@ static void Task_loadManager(void *pvParameters) {
 					}
 				}
 			}
-			else if (event >= EVENT_SWITCH_OFF(0) && event <= EVENT_SWITCH_OFF(4)) {
+			else if (event.code >= EVENT_SWITCH_OFF(0) && event <= EVENT_SWITCH_OFF(4)) {
 				if (maintainanceMode) {
 					updateStateFromSwitch();
 				}
 				else {
-					i = event - EVENT_SWITCH_OFF(0);
+					i = event.code - EVENT_SWITCH_OFF(0);
 					if (i < LOAD_MANAGER_LOADS) {
 						if (state[i] == ENABLED) {
 							state[i] = DISABLED;
@@ -224,9 +218,7 @@ static void Task_loadManager(void *pvParameters) {
 					}
 				}
 			}
-			else if (event == EVENT_LOAD_MANAGER_GRACE_EXPIRED) {
-				// May seem redundant to check it, but accounts for when events
-				// stored in queue gets outdated before they are processed
+			else if (event.code == EVENT_LOAD_MANAGER_GRACE_EXPIRED) {
 				if (!gracePeriod) {
 					if (!maintainanceMode) {
 						if (sheddingLoads) {
@@ -273,10 +265,9 @@ void LoadManager_start() {
 		state[i] = (ManagedState) ((switchValue >> i) & 1);
 	}
 
-	xLoadManagerQueue = xQueueCreate(16, sizeof(uint8_t));
+	xLoadManagerQueue = xQueueCreate(16, sizeof(Event));
 	graceTimer = xTimerCreate("graceTimer", xGraceTimerFrequency, pdTRUE, NULL, graceTimerCallback);
 	xTaskCreate(Task_loadManager, "loadManager", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
-	printf("finished LM init");
 }
 
 QueueHandle_t LoadManager_getQueueHandle() {
@@ -287,6 +278,6 @@ ManagedState LoadManager_getState(uint8_t i) {
 	return state[i];
 }
 
-ReactionTime LoadManager_getReactionTimes() {
-	return reactionTimes;
-}
+ReactionTime LoadManager_getReactionTimes() { 
+    return reactionTimes; 
+} 

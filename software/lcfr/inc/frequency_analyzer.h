@@ -3,16 +3,16 @@
 
 #define FREQUENCY_ANALYZER_SAMPLING_FREQUENCY 16000.0f
 
-#define EVENT_FREQUENCY_ANALYZER_STABLE 254
-#define EVENT_FREQUENCY_ANALYZER_UNSTABLE 253
-
-#include <system.h>
-
 typedef struct {
 	uint32_t adcSamples;
 	float instant;
 	float derivative;
 } FrequencySample;
+
+typedef struct {
+	uint32_t timestamp;
+	uint32_t adcSamples;
+} ADCSample;
 
 void FrequencyAnalyzer_start();
 

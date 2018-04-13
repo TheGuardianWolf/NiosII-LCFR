@@ -8,6 +8,7 @@
 #include "switch.h"
 #include "load_manager.h"
 #include "system.h"
+#include "event.h"
 
 static const TickType_t xFrequency = SWITCH_PERIOD * portTICK_PERIOD_MS;
 
@@ -16,7 +17,7 @@ static bool state[5] = {true, true, true, true, true};
 static void Task_switch(void *pvParameters) {
 	TickType_t xLastWakeTime;
 	bool newState;
-	uint8_t event;
+	Event event;
 	uint8_t switchValue;
 
 	while (1) {
@@ -24,12 +25,14 @@ static void Task_switch(void *pvParameters) {
 
 		switchValue = IORD_ALTERA_AVALON_PIO_DATA(SLIDE_SWITCH_BASE);
 
+		event.timestamp = timestamp();
+
 		uint8_t i;
 		for (i = 0; i < SWITCH_COUNT; i++) {
 			newState = (switchValue >> i) & 1;
 			if (newState != state[i]) {
-				event = state[i] ? EVENT_SWITCH_OFF(i) : EVENT_SWITCH_ON(i);
-				xQueueSend(LoadManager_getQueueHandle(), &event, 10);
+				event.code = state[i] ? EVENT_SWITCH_OFF(i) : EVENT_SWITCH_ON(i);	
+				xQueueSend(LoadManager_getQueueHandle(), &event, portMAX_DELAY);
 			}
 			state[i] = newState;
 		}

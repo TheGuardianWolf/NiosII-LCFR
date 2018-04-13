@@ -8,12 +8,19 @@
 #include "button.h"
 #include "load_manager.h"
 #include "system.h"
+#include "event.h"
 
 static void ISR_button() {
+	
 	uint8_t buttonValue = IORD_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE);
 	IOWR_ALTERA_AVALON_PIO_EDGE_CAP(PUSH_BUTTON_BASE, 0x7);
 
-	uint8_t event = EVENT_BUTTON_PRESSED;
+	uint32_t timestamp = timestamp();
+
+	Event event = {
+		.code = EVENT_BUTTON_PRESSED;
+		.timestamp = timestamp();
+	}
 	xQueueSendFromISR(LoadManager_getQueueHandle(), &event, NULL);
 #if DEBUG == 0
 	printf("Button\n");
