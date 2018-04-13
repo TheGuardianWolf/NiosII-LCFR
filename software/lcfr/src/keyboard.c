@@ -33,7 +33,6 @@ static char keyInput_decoded;
 static char keyBuffer[KB_KEYBUFFER_SIZE];
 static SemaphoreHandle_t xKeyBufferMutex;
 static QueueHandle_t xKeyboardQueue;
-TaskHandle_t xHandle;
 
 //flag for ignoring key presses
 static bool flag = false;
@@ -87,15 +86,14 @@ static void change_type() {
 }
 
 void KB_Task(void *pvParameters ) {
-	xHandle = xTaskGetCurrentTaskHandle();
 	char keyBufferTemp;
 	unsigned int i = 0;
 	struct config config_info_temp = {
 		.type = current_type,
 		.value = 0.0f
 	};
+
 	while(1) {
-		printf("%d\n",(int)uxQueueSpacesAvailable( xKeyboardQueue ));
 		if(xQueueReceive(xKeyboardQueue, &keyBufferTemp, portMAX_DELAY) == pdTRUE) {
 			if ((keyBufferTemp >= '0' && keyBufferTemp <= '9' ) || keyBufferTemp == '.') {
 				KB_setKey(i, keyBufferTemp);
@@ -157,13 +155,13 @@ void KB_start(){
 	// register the PS/2 interrupt
 	IOWR_8DIRECT(PS2_BASE,4,1);
 
-	xKeyBufferMutex = xSemaphoreCreateBinary();
+	xKeyBufferSemaphore = xSemaphoreCreateMutex();
 
 	//Create queue for display
 	xKeyboardQueue = xQueueCreate( 16, sizeof(char));
 
 	//Create draw task
-	xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 10, NULL );
+	xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 4, NULL );
 	//create the binary semaphore for the keys variable
 	xKeyBufferMutex = xSemaphoreCreateMutex();
 

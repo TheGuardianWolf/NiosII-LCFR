@@ -48,5 +48,5 @@ static void Task_LED(void *pvParameters) {
 }
 
 void LED_start() {
-	xTaskCreate(Task_LED, "led", configMINIMAL_STACK_SIZE, NULL, 3, NULL);
+	xTaskCreate(Task_LED, "led", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
 }

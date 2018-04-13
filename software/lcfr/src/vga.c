@@ -7,6 +7,7 @@
 #include "io.h"
 #include "altera_up_avalon_video_character_buffer_with_dma.h"
 #include "altera_up_avalon_video_pixel_buffer_dma.h"
+#include <time.h>
 
 
 #include "FreeRTOS/FreeRTOS.h"
@@ -16,6 +17,7 @@
 #include "VGA.h"
 #include "keyboard.h"
 #include "frequency_analyzer.h"
+#include "load_manager.h"
 
 //For frequency plot
 #define FREQPLT_ORI_X 101		//x axis pixel position at the plot origin
@@ -60,6 +62,7 @@ void PRVGADraw_Task(void *pvParameters ){
 	printf("enter vga");
 	alt_up_pixel_buffer_dma_clear_screen(pixel_buf, 0);
 	alt_up_char_buffer_clear(char_buf);
+	ReactionTimes reaction_times;
 
 	//Set up plot axes
 	alt_up_pixel_buffer_dma_draw_hline(pixel_buf, 100, 590, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
@@ -80,7 +83,11 @@ void PRVGADraw_Task(void *pvParameters ){
 	alt_up_char_buffer_string(char_buf, "-30", 9, 34);
 	alt_up_char_buffer_string(char_buf, "-60", 9, 36);
 
-	alt_up_char_buffer_string(char_buf, "Reaction time: ", 38, 48);
+	alt_up_char_buffer_string(char_buf, "Reaction time: ", 4, 41);
+	alt_up_char_buffer_string(char_buf, "Max: ", 4, 43);
+	alt_up_char_buffer_string(char_buf, "Min: ", 20, 43);
+	alt_up_char_buffer_string(char_buf, "Ave: ", 36, 43);
+	alt_up_char_buffer_string(char_buf, "Total: ", 52, 43);
 
 	alt_up_char_buffer_string(char_buf, "System Status: ", 4, 46);
 	alt_up_char_buffer_string(char_buf, "Lower Freq Threshold: ", 4, 48);
@@ -124,12 +131,25 @@ void PRVGADraw_Task(void *pvParameters ){
 			//printf("%f\n", receivedFrequencyInfo.derivative);
 			i =	++i%100; //point to the next data (oldest) to be overwritten
 		}
+
+		reaction_times = LoadManager_getReactionTimes();
+
 		alt_up_char_buffer_string(char_buf, configValues[0], 26, 48);
 		alt_up_char_buffer_string(char_buf, configValues[1], 26, 50);
 		alt_up_char_buffer_string(char_buf, configValues[2], 30, 52);
 		alt_up_char_buffer_string(char_buf, configType == 0 ? newConfigValue : "     ", 71, 48);
 		alt_up_char_buffer_string(char_buf, configType == 1 ? newConfigValue : "     ", 71, 50);
 		alt_up_char_buffer_string(char_buf, configType == 2 ? newConfigValue : "     ", 71, 52);
+
+		char sysTime[KB_KEYBUFFER_SIZE];
+		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(reaction_times.max));
+		alt_up_char_buffer_string(char_buf, sysTime, 9, 43);
+		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(reaction_times.min));
+		alt_up_char_buffer_string(char_buf, sysTime, 25, 43);
+		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(reaction_times.average));
+		alt_up_char_buffer_string(char_buf, sysTime, 41, 43);
+		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(xLastWakeTime * portTICK_PERIOD_MS));
+		alt_up_char_buffer_string(char_buf, sysTime, 59, 43);
 
 		//clear old graph to draw new graph
 		alt_up_pixel_buffer_dma_draw_box(pixel_buf, 101, 0, 639, 199, 0, 0);
@@ -188,7 +208,7 @@ void VGA_start(){
 	xVGAQueue = xQueueCreate( 10, sizeof(VGAFrequencyInfo));
 
 	//Create draw task
-	xTaskCreate( PRVGADraw_Task, "DrawTsk", configMINIMAL_STACK_SIZE, NULL, 2, &PRVGADraw );
+	xTaskCreate( PRVGADraw_Task, "DrawTsk", configMINIMAL_STACK_SIZE, NULL, 1, &PRVGADraw );
 
 	printf("finished VGA init");
 }

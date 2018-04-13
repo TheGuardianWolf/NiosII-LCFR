@@ -83,8 +83,8 @@ static void shedLoad() {
 }
 
 static void enableLoad() {
-	uint8_t i;
-	for (i = 0; i < LOAD_MANAGER_LOADS; i++) {
+	int8_t i;
+	for (i = LOAD_MANAGER_LOADS - 1; i >= 0 ; i--) {
 		if (state[i] == SHED) {
 			state[i] = ENABLED;
 			break;
