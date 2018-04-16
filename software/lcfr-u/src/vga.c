@@ -156,12 +156,12 @@ void PRVGADraw_Task(void *pvParameters ){
 
 		char sysTime[KB_KEYBUFFER_SIZE];
 		for (k = 0; k < 3; k++) {
-			uint32_t t = (((uint32_t*)(&reactionTimes))[k]);
-			if (t == UINT_MAX || t == 0) {
-				snprintf(sysTime, sizeof(sysTime), "--------");
+			uint64_t t = (((uint64_t*)(&reactionTimes))[k]);
+			if (t == UINT_MAX || t == 0.0f) {
+				snprintf(sysTime, sizeof(sysTime), "----");
 			}
 			else {
-				snprintf(sysTime, sizeof(sysTime), "%8u", (unsigned int)t);
+				snprintf(sysTime, sizeof(sysTime), "%4.4f", (float)t / 100000);
 			}
 			alt_up_char_buffer_string(char_buf, sysTime, 9 + k * 16, 43);
 		}
@@ -172,7 +172,7 @@ void PRVGADraw_Task(void *pvParameters ){
 //		alt_up_char_buffer_string(char_buf, sysTime, 25, 43);
 //		snprintf(sysTime, sizeof(sysTime), "%u", (reactionTimes.average));
 //		alt_up_char_buffer_string(char_buf, sysTime, 41, 43);
-		snprintf(sysTime, sizeof(sysTime), "%12llu", timestamp()/*(xLastWakeTime * portTICK_PERIOD_MS)*/);
+		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(xLastWakeTime * portTICK_PERIOD_MS));
 		alt_up_char_buffer_string(char_buf, sysTime, 59, 43);
 
 		//clear old graph to draw new graph

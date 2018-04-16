@@ -3,7 +3,7 @@
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-//#include "sys/alt_timestamp.h"
+#include "sys/alt_timestamp.h"
 
 #include "button.h"
 #include "led.h"
@@ -15,7 +15,7 @@
 #include "event.h"
 
 static void init() {
-//	Event_start();
+	Event_start();
 	VGA_start();
 	KB_start();
 	Switch_start();

@@ -23,9 +23,9 @@ typedef enum {
 } ManagedState;
 
 typedef struct { 
-    uint32_t min; 
-    uint32_t max; 
-    uint32_t average; 
+    uint64_t min;
+    uint64_t max;
+    uint64_t average;
     uint32_t averageSamples; 
 } ReactionTimes; 
 
