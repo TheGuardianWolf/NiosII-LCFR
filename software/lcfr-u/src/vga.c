@@ -172,7 +172,7 @@ void PRVGADraw_Task(void *pvParameters ){
 //		alt_up_char_buffer_string(char_buf, sysTime, 25, 43);
 //		snprintf(sysTime, sizeof(sysTime), "%u", (reactionTimes.average));
 //		alt_up_char_buffer_string(char_buf, sysTime, 41, 43);
-		snprintf(sysTime, sizeof(sysTime), "%u", (unsigned int)(xLastWakeTime * portTICK_PERIOD_MS));
+		snprintf(sysTime, sizeof(sysTime), "%8u", (unsigned int)(xLastWakeTime * portTICK_PERIOD_MS));
 		alt_up_char_buffer_string(char_buf, sysTime, 59, 43);
 
 		//clear old graph to draw new graph
