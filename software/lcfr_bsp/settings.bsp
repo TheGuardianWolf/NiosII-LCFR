@@ -4,9 +4,9 @@
         <BspVersion>default</BspVersion>
         <BspGeneratedTimeStamp>23/03/2018 10:48:07 AM</BspGeneratedTimeStamp>
         <BspGeneratedUnixTimeStamp>1521755287257</BspGeneratedUnixTimeStamp>
-        <BspGeneratedLocation>D:\723\NiosII-LCFR\firmware\software\lcfr_bsp</BspGeneratedLocation>
+        <BspGeneratedLocation>.</BspGeneratedLocation>
         <BspSettingsFile>.\settings.bsp</BspSettingsFile>
-        <SopcDesignFile>D:\723\NiosII-LCFR\firmware\nios2.sopcinfo</SopcDesignFile>
+        <SopcDesignFile>..\..\firmware\nios2.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
         <Cpu>nios2</Cpu>
         <SchemaVersion>1.9</SchemaVersion>
