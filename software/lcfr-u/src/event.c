@@ -5,8 +5,8 @@
  *      Author: Pat
  */
 
-#include <stdint.h>
 #include <limits.h>
+#include "system.h"
 #include "event.h"
 #include "sys/alt_irq.h"
 #include "altera_avalon_timer.h"
@@ -15,11 +15,15 @@
 static uint32_t overflowCount = 0;
 
 static void Event_timestampISR(void* base, alt_u32 id) {
+	alt_irq_context c;
+	c = alt_irq_disable_all();
+	IOWR_ALTERA_AVALON_TIMER_STATUS (base, 0);
+	IORD_ALTERA_AVALON_TIMER_CONTROL (base);
 	overflowCount++;
+	alt_irq_enable_all(c);
 }
 
-void Event_start ()
-{
+void Event_start () {
   /* set to free running mode */
   IOWR_ALTERA_AVALON_TIMER_CONTROL (TIMER1US_BASE,
             ALTERA_AVALON_TIMER_CONTROL_ITO_MSK  |
@@ -27,7 +31,7 @@ void Event_start ()
             ALTERA_AVALON_TIMER_CONTROL_START_MSK);
 
 
-  alt_irq_register (TIMER1US_IRQ, TIMER1US_BASE, Event_timestampISR);
+  alt_irq_register(TIMER1US_IRQ, TIMER1US_BASE, Event_timestampISR);
 }
 
 uint64_t Event_getTimestamp() {

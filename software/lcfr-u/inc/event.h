@@ -1,8 +1,7 @@
 #include <stdint.h>
-#include "sys/alt_timestamp.h"
 
-#define timestamp() ((unsigned int)alt_timestamp())//xTaskGetTickCount() * portTICK_PERIOD_MS
-#define timestampFromISR() ((unsigned int)alt_timestamp())//xTaskGetTickCountFromISR() * portTICK_PERIOD_MS
+#define timestamp() Event_getTimestamp()//xTaskGetTickCount() * portTICK_PERIOD_MS
+#define timestampFromISR() Event_getTimestamp()//xTaskGetTickCountFromISR() * portTICK_PERIOD_MS
 
 #define EVENT_LOAD_MANAGER_GRACE_EXPIRED 255
 #define EVENT_FREQUENCY_ANALYZER_STABLE 254
@@ -12,6 +11,11 @@
 #define EVENT_SWITCH_OFF(x) (242 + x)
 
 typedef struct {
-    uint32_t timestamp;
+    uint64_t timestamp;
     uint8_t code;
 } Event;
+
+void Event_start();
+
+uint64_t Event_getTimestamp();
+

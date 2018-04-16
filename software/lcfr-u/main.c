@@ -3,7 +3,7 @@
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "sys/alt_timestamp.h"
+//#include "sys/alt_timestamp.h"
 
 #include "button.h"
 #include "led.h"
@@ -12,8 +12,10 @@
 #include "switch.h"
 #include "keyboard.h"
 #include "vga.h"
+#include "event.h"
 
 static void init() {
+//	Event_start();
 	VGA_start();
 	KB_start();
 	Switch_start();
@@ -28,8 +30,7 @@ static void init() {
  */
 int main(void) {
 	init();
-	alt_timestamp_start();
-	printf("frq: %u\n", alt_timestamp_freq());
+//	alt_timestamp_start();
 	/* Finally start the scheduler. */
 	vTaskStartScheduler();
 

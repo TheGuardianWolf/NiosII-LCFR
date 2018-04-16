@@ -19,6 +19,7 @@
 #include "keyboard.h"
 #include "frequency_analyzer.h"
 #include "load_manager.h"
+#include "event.h"
 
 //For frequency plot
 #define FREQPLT_ORI_X 101		//x axis pixel position at the plot origin
@@ -83,9 +84,9 @@ void PRVGADraw_Task(void *pvParameters ){
 	alt_up_char_buffer_string(char_buf, "-30", 9, 34);
 	alt_up_char_buffer_string(char_buf, "-60", 9, 36);
 
-	alt_up_char_buffer_string(char_buf, "Reaction time: ", 4, 41);
-	alt_up_char_buffer_string(char_buf, "Max: ", 4, 43);
-	alt_up_char_buffer_string(char_buf, "Min: ", 20, 43);
+	alt_up_char_buffer_string(char_buf, "Reaction time(ms): ", 4, 41);
+	alt_up_char_buffer_string(char_buf, "Min: ", 4, 43);
+	alt_up_char_buffer_string(char_buf, "Max: ", 20, 43);
 	alt_up_char_buffer_string(char_buf, "Ave: ", 36, 43);
 	alt_up_char_buffer_string(char_buf, "Total: ", 52, 43);
 
@@ -127,6 +128,20 @@ void PRVGADraw_Task(void *pvParameters ){
 		while (xQueueReceive(xVGAQueue, &receivedFrequencyInfo, 0) == pdTRUE) {
 			alt_up_char_buffer_string(char_buf, receivedFrequencyInfo.stable ? "Stable  " : "Unstable", 19, 46);
 			frequencyInfo[i] = receivedFrequencyInfo;
+
+			//guards incase the values overflow the graph
+			if (frequencyInfo[i].derivative > 60.0f) {
+				frequencyInfo[i].derivative = 60.0f;
+			}
+			else if (frequencyInfo[i].derivative < -60.0f) {
+				frequencyInfo[i].derivative = -60.0f;
+			}
+			if (frequencyInfo[i].freq > 52.0f) {
+				frequencyInfo[i].freq = 52.0f;
+			}
+			else if (frequencyInfo[i].freq < 46.0f) {
+				frequencyInfo[i].freq = 46.0f;
+			}
 			i =	++i%100; //point to the next data (oldest) to be overwritten
 		}
 
@@ -157,7 +172,7 @@ void PRVGADraw_Task(void *pvParameters ){
 //		alt_up_char_buffer_string(char_buf, sysTime, 25, 43);
 //		snprintf(sysTime, sizeof(sysTime), "%u", (reactionTimes.average));
 //		alt_up_char_buffer_string(char_buf, sysTime, 41, 43);
-		snprintf(sysTime, sizeof(sysTime), "%8u", (xLastWakeTime * portTICK_PERIOD_MS));
+		snprintf(sysTime, sizeof(sysTime), "%12llu", timestamp()/*(xLastWakeTime * portTICK_PERIOD_MS)*/);
 		alt_up_char_buffer_string(char_buf, sysTime, 59, 43);
 
 		//clear old graph to draw new graph
