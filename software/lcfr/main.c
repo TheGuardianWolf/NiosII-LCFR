@@ -14,6 +14,7 @@
 #include "vga.h"
 
 static void init() {
+	Event_start();
 	VGA_start();
 	KB_start();
 	Switch_start();

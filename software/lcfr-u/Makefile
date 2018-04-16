@@ -158,6 +158,7 @@ C_SRCS += src/led.c
 C_SRCS += src/load_manager.c
 C_SRCS += src/switch.c
 C_SRCS += src/vga.c
+C_SRCS += src/event.c
 CXX_SRCS :=
 ASM_SRCS := inc/freertos/port_asm.S
 

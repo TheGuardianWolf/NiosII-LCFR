@@ -44,9 +44,9 @@ static ReactionTimes reactionTimes = {
     .averageSamples = 0 
 };
 
-static void registerReactionTime(uint32_t then) {
-	uint32_t now = timestamp();
-	uint32_t t = now - then;
+static void registerReactionTime(uint64_t then) {
+	uint64_t now = timestamp();
+	uint64_t t = now - then;
 	xSemaphoreTake(xReactionTimesMutex, portMAX_DELAY);
     if (t < reactionTimes.min) { 
         reactionTimes.min = t; 
