@@ -1,9 +1,6 @@
-#define DEBUG 1
-#include "stdio.h"
 /* Scheduler includes. */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "sys/alt_timestamp.h"
 
 #include "button.h"
 #include "led.h"
@@ -30,7 +27,6 @@ static void init() {
  */
 int main(void) {
 	init();
-//	alt_timestamp_start();
 	/* Finally start the scheduler. */
 	vTaskStartScheduler();
 

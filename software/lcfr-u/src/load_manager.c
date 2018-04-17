@@ -7,34 +7,22 @@
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
 
+#include "system.h"
 #include "load_manager.h"
 #include "switch.h"
-#include "button.h"
-#include "frequency_analyzer.h"
-#include "system.h"
 #include "event.h"
 
 static const TickType_t xGraceTimerFrequency = LOAD_MANAGER_GRACE * portTICK_PERIOD_MS;
 static QueueHandle_t xLoadManagerQueue;
-
 static SemaphoreHandle_t xReactionTimesMutex;
-
 static bool gracePeriod = false;
-
 static TimerHandle_t graceTimer;
-
 static bool managementMode = false;
-
 static bool maintainanceMode = false;
-
 static bool sheddingLoads = false;
-
 static ManagedState state[LOAD_MANAGER_LOADS] = {ENABLED, ENABLED, ENABLED, ENABLED, ENABLED};
-
 static int8_t enabledLoadsCount = LOAD_MANAGER_LOADS;
-
 static int8_t managedLoadsCount = LOAD_MANAGER_LOADS;
-
 static Event event;
 
 static ReactionTimes reactionTimes = { 
@@ -57,8 +45,8 @@ static void registerReactionTime(float then) {
     } 
  
     reactionTimes.average = (reactionTimes.average * reactionTimes.averageSamples + t) / (reactionTimes.averageSamples + 1);
-    reactionTimes.averageSamples++;
-    xSemaphoreGive(xReactionTimesMutex);
+	xSemaphoreGive(xReactionTimesMutex);
+    reactionTimes.averageSamples++;  
 } 
 
 static void graceTimerCallback(xTimerHandle t_timer) {
@@ -106,13 +94,8 @@ static void updateStateFromSwitch() {
 	uint8_t i;
 	int8_t enabledLoads = 0;
 
-	bool switchStates[SWITCH_COUNT];
-	Switch_getState(switchStates);
-	printf("Current switch state LM is [%u, %u, %u, %u, %u]\n",
-			switchStates[0], switchStates[1], switchStates[2], switchStates[3], switchStates[4]);
-
 	for (i = 0; i < LOAD_MANAGER_LOADS && i < SWITCH_COUNT; i++) {
-		if (switchStates[i]) {
+		if (Switch_getState(i)) {
 			state[i] = ENABLED;
 			enabledLoads++;
 		}
@@ -135,8 +118,6 @@ static void Task_loadManager(void *pvParameters) {
 				if (maintainanceMode) {
 					managementMode = false;
 					updateStateFromSwitch();
-//					printf("Current switch state is [%u, %u, %u, %u, %u]\n",
-//							state[0], state[1], state[2], state[3], state[4]);
 				}
 			}
 			else if (event.code == EVENT_FREQUENCY_ANALYZER_STABLE) {
@@ -188,11 +169,8 @@ static void Task_loadManager(void *pvParameters) {
 			else if (event.code >= EVENT_SWITCH_ON(0) && event.code <= EVENT_SWITCH_ON(4)) {
 				if (maintainanceMode) {
 					updateStateFromSwitch();
-//					printf("Current switch state is [%u, %u, %u, %u, %u]\n",
-//							state[0], state[1], state[2], state[3], state[4]);
 				}
 				else {
-//					printf("%d\n", managementMode);
 					i = event.code - EVENT_SWITCH_ON(0);
 					if (i < LOAD_MANAGER_LOADS) {
 						if (state[i] == DISABLED) {
@@ -212,8 +190,6 @@ static void Task_loadManager(void *pvParameters) {
 			else if (event.code >= EVENT_SWITCH_OFF(0) && event.code <= EVENT_SWITCH_OFF(4)) {
 				if (maintainanceMode) {
 					updateStateFromSwitch();
-//					printf("Current switch state is [%u, %u, %u, %u, %u]\n",
-//							state[0], state[1], state[2], state[3], state[4]);
 				}
 				else {
 					i = event.code - EVENT_SWITCH_OFF(0);
@@ -244,7 +220,6 @@ static void Task_loadManager(void *pvParameters) {
 						if (sheddingLoads) {
 							if (managedLoadsCount > 1) {
 								shedLoad();
-								// graceTimerReset
 							}
 							else if (managedLoadsCount == 1) {
 								shedLoad();
@@ -257,7 +232,6 @@ static void Task_loadManager(void *pvParameters) {
 						else {
 							if (enabledLoadsCount < managedLoadsCount - 1) {
 								enableLoad();
-								// graceTimerReset();
 							}
 							else if (enabledLoadsCount == managedLoadsCount - 1) {
 								managementMode = false;
@@ -273,8 +247,6 @@ static void Task_loadManager(void *pvParameters) {
 				}
 			}
 		}
-
-		//printf("Event received: %u, sheddingLoads: %u\n", event, (unsigned int) sheddingLoads);
 	}
 }
 
@@ -305,7 +277,3 @@ ReactionTimes LoadManager_getReactionTimes() {
 	xSemaphoreGive(xReactionTimesMutex);
     return retVal;
 } 
-
-bool LoadManager_isMaintainanceMode() {
-	return maintainanceMode;
-}

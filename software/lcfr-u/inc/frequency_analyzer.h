@@ -1,7 +1,10 @@
 #ifndef FREQUENCY_ANALYZER_H_
 #define FREQUENCY_ANALYZER_H_
 
+#include <stdint.h>
+
 #define FREQUENCY_ANALYZER_SAMPLING_FREQUENCY 16000.0f
+#define FREQUENCY_ANALYZER_CONFIG_TYPES 3
 
 typedef struct {
 	uint32_t adcSamples;

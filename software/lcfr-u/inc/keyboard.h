@@ -8,9 +8,16 @@
 #ifndef KEYBOARD_H_
 #define KEYBOARD_H_
 
+#include <stdint.h>
+
 #define KB_KEYBUFFER_SIZE 16
+#define KB_TAB 0x0D
+#define KB_BACKSPACE 0x66
+#define KB_ENTER 0x5A
 
 void KB_start();
+
+uint8_t KB_getKeyBufferType();
 
 void KB_getKeyBuffer(char* buf);
 

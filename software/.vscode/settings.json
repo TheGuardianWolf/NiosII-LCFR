@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.ptjava": "java",
         "*.html.txt": "html",
         "load_manager.h": "c",
         "freertos.h": "c",
@@ -8,6 +9,9 @@
         "altera_up_avalon_video_pixel_buffer_dma.h": "c",
         "task.h": "c",
         "queue.h": "c",
-        "timers.h": "c"
+        "timers.h": "c",
+        "alt_irq.h": "c",
+        "altera_up_avalon_ps2.h": "c",
+        "altera_up_avalon_video_character_buffer_with_dma.h": "c"
     }
 }

@@ -38,10 +38,6 @@ static void Task_LED(void *pvParameters) {
 		IOWR_ALTERA_AVALON_PIO_DATA(RED_LEDS_BASE, redLEDValue);
 		IOWR_ALTERA_AVALON_PIO_DATA(GREEN_LEDS_BASE, greenLEDValue);
 
-#if DEBUG == 1
-		printf("Task_LED ran at %u\n", xLastWakeTime);
-#endif
-
 		vTaskDelayUntil(&xLastWakeTime, xFrequency);
 	}
 }

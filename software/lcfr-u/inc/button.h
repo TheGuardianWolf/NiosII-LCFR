@@ -8,13 +8,7 @@
 #ifndef BUTTON_H_
 #define BUTTON_H_
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <system.h>
-
 #define BUTTON_COUNT 1
-
-// typedef void (*ButtonEventHandler)(void);
 
 void Button_start();
 

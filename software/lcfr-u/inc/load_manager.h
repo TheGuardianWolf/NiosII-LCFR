@@ -37,6 +37,4 @@ ManagedState LoadManager_getState(uint8_t i);
 
 ReactionTimes LoadManager_getReactionTimes();
 
-bool LoadManager_isMaintainanceMode();
-
 #endif /* LOAD_MANAGER_H_ */

@@ -16,6 +16,6 @@
 
 void Switch_start();
 
-void Switch_getState(bool * buf);
+bool Switch_getState(uint8_t i);
 
 #endif /* LOAD_SWITCH_H_ */
