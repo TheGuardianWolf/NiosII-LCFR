@@ -143,6 +143,7 @@ static void Task_loadManager(void *pvParameters) {
 				}
 			}
 			else if (event.code == EVENT_FREQUENCY_ANALYZER_UNSTABLE) {
+				bool prevManagementMode = managementMode;
 				sheddingLoads = true;
 				managementMode = true;
 				if (!maintainanceMode) {
@@ -162,7 +163,9 @@ static void Task_loadManager(void *pvParameters) {
 						else if (enabledLoadsCount == 1) {
 							shedLoad();
 						}
-						registerReactionTime(event.timestamp);
+						if (!prevManagementMode) {
+							registerReactionTime(event.timestamp);
+						}
 					}
 				}
 			}
