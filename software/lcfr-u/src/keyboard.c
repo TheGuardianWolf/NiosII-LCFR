@@ -74,7 +74,7 @@ static void changeType() {
     }
 }
 
-void KB_Task(void *pvParameters ) {
+static void Task_KB(void *pvParameters ) {
     while(1) {
         if (xQueueReceive(xKeyboardQueue, &newKey, portMAX_DELAY) == pdTRUE) {
             if ((newKey >= '0' && newKey <= '9' ) || newKey == '.') {
@@ -140,5 +140,5 @@ void KB_start() {
     //Create queue for display
     xKeyboardQueue = xQueueCreate( 16, sizeof(char));
     //Create draw task
-    xTaskCreate( KB_Task, "KBTsk", configMINIMAL_STACK_SIZE, NULL, 4, NULL );    
+    xTaskCreate( KB_Task, "KB", configMINIMAL_STACK_SIZE, NULL, 4, NULL );    
 }

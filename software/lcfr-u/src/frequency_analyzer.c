@@ -83,7 +83,7 @@ void FrequencyAnalyzer_start() {
     alt_irq_register(FREQUENCY_ANALYSER_IRQ, NULL, ISR_frequencyAnalyzer);
 	xFrequencyAnalyzerQueue = xQueueCreate(8, sizeof(ADCSample));
 	//xConfigSemaphore = xSemaphoreCreateMutex();
-	xTaskCreate(Task_frequencyAnalyzer, "frequencyAnalyzer",  configMINIMAL_STACK_SIZE, NULL, 6, NULL);
+	xTaskCreate(Task_frequencyAnalyzer, "frequencyAnalyzer",  configMINIMAL_STACK_SIZE, NULL, 7, NULL);
 }
 
 float FrequencyAnalyzer_getConfig(uint8_t configIndex) {

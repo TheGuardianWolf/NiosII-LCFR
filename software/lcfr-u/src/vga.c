@@ -200,5 +200,5 @@ void VGA_start(){
 	xVGAQueue = xQueueCreate( 16, sizeof(VGAFrequencyInfo));
 
 	//Create draw task
-	xTaskCreate(Task_VGA, "DrawTsk", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+	xTaskCreate(Task_VGA, "VGA", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
 }

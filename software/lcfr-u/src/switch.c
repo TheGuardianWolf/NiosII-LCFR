@@ -50,7 +50,7 @@ void Switch_start() {
 	for (i = 0; i < SWITCH_COUNT; i++) {
 		state[i] = (switchValue >> i) & 1;
 	}
-	xTaskCreate(Task_switch, "switch", configMINIMAL_STACK_SIZE, NULL, 3, NULL);
+	xTaskCreate(Task_switch, "switch", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
 }
 
 bool Switch_getState(uint8_t i) {

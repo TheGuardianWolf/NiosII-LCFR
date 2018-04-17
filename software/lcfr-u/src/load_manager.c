@@ -263,7 +263,7 @@ void LoadManager_start() {
 	xLoadManagerQueue = xQueueCreate(16, sizeof(Event));
 	xReactionTimesMutex = xSemaphoreCreateMutex();
 	graceTimer = xTimerCreate("graceTimer", xGraceTimerFrequency, pdTRUE, NULL, graceTimerCallback);
-	xTaskCreate(Task_loadManager, "loadManager", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+	xTaskCreate(Task_loadManager, "loadManager", configMINIMAL_STACK_SIZE, NULL, 6, NULL);
 }
 
 QueueHandle_t LoadManager_getQueueHandle() {
