@@ -20,6 +20,7 @@ static TimerHandle_t graceTimer;
 static bool managementMode = false;
 static bool maintainanceMode = false;
 static bool sheddingLoads = false;
+static bool isStable = true;
 static ManagedState state[LOAD_MANAGER_LOADS] = {ENABLED, ENABLED, ENABLED, ENABLED, ENABLED};
 static int8_t enabledLoadsCount = LOAD_MANAGER_LOADS;
 static int8_t managedLoadsCount = LOAD_MANAGER_LOADS;
@@ -119,8 +120,23 @@ static void Task_loadManager(void *pvParameters) {
 					managementMode = false;
 					updateStateFromSwitch();
 				}
+				else {
+					if (!isStable) {
+						managementMode = true;
+						sheddingLoads = true;
+
+						if (enabledLoadsCount > 1) {
+							shedLoad();
+							graceTimerReset();
+						}
+						else if (enabledLoadsCount == 1) {
+							shedLoad();
+						}
+					}
+				}
 			}
 			else if (event.code == EVENT_FREQUENCY_ANALYZER_STABLE) {
+				isStable = true;
 				sheddingLoads = false;
 				if (!maintainanceMode) {
 					if (gracePeriod) {
@@ -143,6 +159,7 @@ static void Task_loadManager(void *pvParameters) {
 				}
 			}
 			else if (event.code == EVENT_FREQUENCY_ANALYZER_UNSTABLE) {
+				isStable = false;
 				bool prevManagementMode = managementMode;
 				sheddingLoads = true;
 				managementMode = true;
