@@ -12,6 +12,7 @@
 #include "system.h"
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
@@ -28,6 +29,7 @@ static char keyInputKeycode = 0;
 static char keyInputDecoded;
 static uint8_t keyBufferIndex = 0;
 static char keyBuffer[KB_KEYBUFFER_SIZE];
+static char newKeyBuffer[KB_KEYBUFFER_SIZE];
 static char newKey;
 static SemaphoreHandle_t xKeyBufferMutex;
 static QueueHandle_t xKeyboardQueue;
@@ -66,7 +68,7 @@ static void ps2_isr(void* ps2Device, uint32_t id) {
 }
 
 static void changeType() {
-    if (currentType < FREQUENCY_ANALYZER_CONFIG_TYPES) {
+    if (currentType < FREQUENCY_ANALYZER_CONFIG_TYPES - 1) {
         currentType++;
     }
     else {
@@ -78,21 +80,23 @@ static void Task_KB(void *pvParameters ) {
     while(1) {
         if (xQueueReceive(xKeyboardQueue, &newKey, portMAX_DELAY) == pdTRUE) {
             if ((newKey >= '0' && newKey <= '9' ) || newKey == '.') {
-				if (keyBufferIndex < KB_KEYBUFFER_SIZE) {
+            	//printf("newKey: %c\n", newKey);
+				if (keyBufferIndex < KB_KEYBUFFER_SIZE - 1) {
+					KB_setKey(keyBufferIndex + 1, '\0');
 					KB_setKey(keyBufferIndex, newKey);
                 	keyBufferIndex++;
 				}
             }
             else if (newKey == KB_ENTER) {
                 KB_setKey(keyBufferIndex, '\0');
-				KB_getKeyBuffer(newKey);
-                FrequencyAnalyzer_setConfig(currentType, (float)atof(newKey));
+				KB_getKeyBuffer(newKeyBuffer);
+                FrequencyAnalyzer_setConfig(currentType, (float)atof(newKeyBuffer));
                 KB_setKey(0, '\0');
                 keyBufferIndex = 0;
                 changeType();
             }
             else if (newKey == KB_BACKSPACE) {
-				if (keyBufferIndex > 1) {
+				if (keyBufferIndex > 0) {
 					keyBufferIndex--;
 				}
 				KB_setKey(keyBufferIndex, '\0');
@@ -140,5 +144,5 @@ void KB_start() {
     //Create queue for display
     xKeyboardQueue = xQueueCreate( 16, sizeof(char));
     //Create draw task
-    xTaskCreate( KB_Task, "KB", configMINIMAL_STACK_SIZE, NULL, 4, NULL );    
+    xTaskCreate( Task_KB, "KB", configMINIMAL_STACK_SIZE, NULL, 4, NULL );
 }

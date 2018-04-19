@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define KB_KEYBUFFER_SIZE 16
+#define KB_KEYBUFFER_SIZE 9
 #define KB_TAB 0x0D
 #define KB_BACKSPACE 0x66
 #define KB_ENTER 0x5A

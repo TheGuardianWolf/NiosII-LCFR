@@ -36,12 +36,17 @@ static VGAFrequencyInfo frequencyInfo[100];
 static VGAFrequencyInfo receivedFrequencyInfo;
 static ReactionTimes reactionTimes;
 
-static setupDisplay() {
+static void setupDisplay() {
+	alt_up_pixel_buffer_dma_clear_screen(pixelBuf, 0);
+	alt_up_char_buffer_clear(charBuf);
+
 	//Set up plot axes
-	alt_up_pixel_buffer_dma_draw_hline(pixelBuf, 100, 590, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
-	alt_up_pixel_buffer_dma_draw_hline(pixelBuf, 100, 590, 300, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
+	alt_up_pixel_buffer_dma_draw_hline(pixelBuf, 100, 595, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
+	alt_up_pixel_buffer_dma_draw_hline(pixelBuf, 100, 595, 300, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
 	alt_up_pixel_buffer_dma_draw_vline(pixelBuf, 100, 50, 200, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
 	alt_up_pixel_buffer_dma_draw_vline(pixelBuf, 100, 220, 300, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
+
+	alt_up_pixel_buffer_dma_draw_vline(pixelBuf, 576, 50, 300, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
 
 	alt_up_char_buffer_string(charBuf, "Frequency(Hz)", 4, 4);
 	alt_up_char_buffer_string(charBuf, "52", 10, 7);
@@ -65,14 +70,11 @@ static setupDisplay() {
 	alt_up_char_buffer_string(charBuf, "System Status: ", 4, 46);
 	alt_up_char_buffer_string(charBuf, "Lower Freq Threshold: ", 4, 48);
 	alt_up_char_buffer_string(charBuf, "Upper Freq Threshold: ", 4, 50);
-	alt_up_char_buffer_string(charBuf, "Change in Freq Threshold: ", 4, 52);
+	alt_up_char_buffer_string(charBuf, "RoC Freq Threshold: ", 4, 52);
 
-	alt_up_char_buffer_string(charBuf, "Enter New Lower Freq Threshold: ", 38, 48);
-	alt_up_char_buffer_string(charBuf, "Enter New Upper Freq Threshold: ", 38, 50);
-	alt_up_char_buffer_string(charBuf, "Enter Change in Freq Threshold: ", 38, 52);
-
-	alt_up_pixel_buffer_dma_clear_screen(pixelBuf, 0);
-	alt_up_char_buffer_clear(charBuf);
+	alt_up_char_buffer_string(charBuf, "New Lower Freq Threshold: ", 39, 48);
+	alt_up_char_buffer_string(charBuf, "New Upper Freq Threshold: ", 39, 50);
+	alt_up_char_buffer_string(charBuf, "New RoC Freq Threshold: ", 39, 52);
 }
 
 
@@ -91,16 +93,16 @@ static void Task_VGA(void *pvParameters ){
 		reactionTimes = LoadManager_getReactionTimes();
 
 		size_t newConfigValueLength = strlen(newConfigValue);
-		for (k = newConfigValueLength; k < 6; k++) {
+		for (k = newConfigValueLength; k < KB_KEYBUFFER_SIZE - 1; k++) {
 			newConfigValue[k] = ' ';
 		}
-		if (newConfigValueLength < 6) {
+		if (newConfigValueLength < KB_KEYBUFFER_SIZE - 1) {
 			newConfigValue[newConfigValueLength] = (xLastWakeTime % 500 < 250) ? '_' : ' ';
 		}
-		newConfigValue[6] = '\0';
+		newConfigValue[KB_KEYBUFFER_SIZE - 1] = '\0';
 
 		for (k = 0; k < VGA_CONFIG_TYPES_COUNT; k++) {
-			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%6.2f", FrequencyAnalyzer_getConfig(k));
+			snprintf(configValues[k], KB_KEYBUFFER_SIZE, "%-9.4f", FrequencyAnalyzer_getConfig(k));
 		}
 
 		//receive frequency data from queue
@@ -125,8 +127,8 @@ static void Task_VGA(void *pvParameters ){
 		}
 
 		for (k = 0; k < VGA_CONFIG_TYPES_COUNT; k++) {
-			alt_up_char_buffer_string(charBuf, configValues[k], 26, 48 + k * 2);
-			alt_up_char_buffer_string(charBuf, configType == k ? newConfigValue : "      ", 71, 48 + k * 2);
+			alt_up_char_buffer_string(charBuf, configValues[k], 28, 48 + k * 2);
+			alt_up_char_buffer_string(charBuf, configType == k ? newConfigValue : "         ", 65, 48 + k * 2);
 		}
 
 		for (k = 0; k < VGA_CONFIG_TYPES_COUNT; k++) {
@@ -144,8 +146,10 @@ static void Task_VGA(void *pvParameters ){
 		alt_up_char_buffer_string(charBuf, timeBuf, 59, 43);
 
 		//clear old graph to draw new graph
-		alt_up_pixel_buffer_dma_draw_box(pixelBuf, 101, 0, 639, 199, 0, 0);
-		alt_up_pixel_buffer_dma_draw_box(pixelBuf, 101, 201, 639, 299, 0, 0);
+		alt_up_pixel_buffer_dma_draw_box(pixelBuf, 101, 0, 575, 199, 0, 0);
+		alt_up_pixel_buffer_dma_draw_box(pixelBuf, 101, 201, 575, 299, 0, 0);
+		alt_up_pixel_buffer_dma_draw_box(pixelBuf, 577, 0, 639, 199, 0, 0);
+		alt_up_pixel_buffer_dma_draw_box(pixelBuf, 577, 201, 639, 299, 0, 0);
 
 		for(j=0;j<99;++j){ //i here points to the oldest data, j loops through all the data to be drawn on VGA
 			if (((int)(frequencyInfo[(i+j)%100].instant) > MIN_FREQ) && ((int)(frequencyInfo[(i+j+1)%100].instant) > MIN_FREQ)){
@@ -169,6 +173,7 @@ static void Task_VGA(void *pvParameters ){
 				alt_up_pixel_buffer_dma_draw_line(pixelBuf, lineRoC.x1, lineRoC.y1, lineRoC.x2, lineRoC.y2, 0x3ff << 0, 0);
 			}
 		}
+		alt_up_pixel_buffer_dma_draw_vline(pixelBuf, 576, 50, 300, ((0x3ff << 20) + (0x3ff << 10) + (0x3ff)), 0);
 
 		vTaskDelayUntil(&xLastWakeTime, xFrequency);
 	}
