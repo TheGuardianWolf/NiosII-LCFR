@@ -1,6 +1,16 @@
 # NiosII-LCFR
 Low Cost Frequency Relay implemented on Cyclone II for CompSys723
 
+Instructions for Programming board
+
+1. Open Quartus programmer
+
+2. Select freq_relay_controller.sof file in the firmware folder
+
+3. Connect USB Blaster and select it
+
+4. Press program
+
 Instructions for Running 
 
 1. Open new workspace in NIOS II 
